@@ -46,6 +46,7 @@ async fn run_app<B: ratatui::backend::Backend>(
     app: &mut App,
 ) -> io::Result<()> {
     let mut last_tick = Instant::now();
+    let mut last_refresh = Instant::now();
     let tick_rate = Duration::from_millis(250);
     
     // Initial fetch
@@ -89,11 +90,15 @@ async fn run_app<B: ratatui::backend::Backend>(
             }
         }
 
-        if last_tick.elapsed() >= Duration::from_secs(60) {
+        if last_tick.elapsed() >= tick_rate {
+            last_tick = Instant::now();
+        }
+
+        if last_refresh.elapsed() >= Duration::from_secs(60) {
             if let Ok(timers) = fetch_timers().await {
                 app.timers = timers;
             }
-            last_tick = Instant::now();
+            last_refresh = Instant::now();
         }
 
         if app.should_quit {
