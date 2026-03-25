@@ -1,6 +1,6 @@
 use tokio::process::Command;
 use serde::Deserialize;
-use chrono::{Utc, TimeZone};
+use chrono::{Utc, TimeZone, Local};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -102,7 +102,7 @@ fn format_time_abs(us: Option<u64>) -> String {
         Some(t) => {
             let dt = Utc.timestamp_opt((t / 1_000_000) as i64, ((t % 1_000_000) * 1000) as u32);
             match dt {
-                chrono::LocalResult::Single(d) => d.format("%Y-%m-%d %H:%M:%S").to_string(),
+                chrono::LocalResult::Single(d) => d.with_timezone(&Local).format("%Y-%m-%d %H:%M:%S").to_string(),
                 _ => "invalid".to_string(),
             }
         }
