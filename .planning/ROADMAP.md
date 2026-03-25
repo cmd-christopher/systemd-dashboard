@@ -26,7 +26,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can press `Tab` to move active focus between the top and bottom panes, with the active pane clearly indicated in the UI.
   4. User can use arrow keys to change content mode only while the top pane is active, and can scroll the current bottom-pane content while the bottom pane is active.
   5. User can always tell whether the bottom pane is showing `Logs` or `Service File`.
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Define detail-pane state contracts and app-level navigation tests
+- [ ] 01-02-PLAN.md — Add service-file content fetching and fallback tests
+- [ ] 01-03-PLAN.md — Wire pane focus, mode switching, and detail UI indicators
 **UI hint**: yes
 
 ## Progress
@@ -36,4 +40,4 @@ Phases execute in numeric order: 1 → 1.1 → 1.2 → 2
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Detail Pane Mode Switching | 0/TBD | Not started | - |
+| 1. Detail Pane Mode Switching | 0/3 | Not started | - |
