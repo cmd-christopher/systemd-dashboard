@@ -234,4 +234,10 @@ mod tests {
         let output = normalize_service_file_output(b"", b"No files found\n", false);
         assert_eq!(output, "Service file unavailable: No files found");
     }
+
+    #[test]
+    fn service_file_output_reports_empty_success_output() {
+        let output = normalize_service_file_output(b"", b"", true);
+        assert_eq!(output, "Service file unavailable: empty output");
+    }
 }
