@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to execute
-stopped_at: Completed 01-detail-pane-mode-switching-02-PLAN.md
-last_updated: "2026-03-25T15:45:25.660Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 01-detail-pane-mode-switching-03-PLAN.md
+last_updated: "2026-03-25T15:52:17.942Z"
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -60,6 +60,8 @@ Recent decisions affecting current work:
 - [Phase 01-detail-pane-mode-switching]: Detail view resets to Top focus, Logs mode, and scroll position zero on both enter and exit.
 - [Phase 01-detail-pane-mode-switching]: Detail content switching is centralized in App helper methods instead of direct field mutation in the event loop.
 - [Phase 01-detail-pane-mode-switching]: Service-file output normalization stays in a pure helper so byte-level tests can cover systemctl results without live system state.
+- [Phase 01-detail-pane-mode-switching]: Periodic detail refresh now follows the active bottom-pane mode and preserves scroll position within new bounds.
+- [Phase 01-detail-pane-mode-switching]: Bottom-pane rendering uses a Paragraph scroll viewport so logs and service-file text share identical scrolling behavior.
 
 ### Pending Todos
 
@@ -71,6 +73,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T15:45:25.658Z
-Stopped at: Completed 01-detail-pane-mode-switching-02-PLAN.md
+Last session: 2026-03-25T15:52:17.940Z
+Stopped at: Completed 01-detail-pane-mode-switching-03-PLAN.md
 Resume file: None

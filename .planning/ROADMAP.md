@@ -30,7 +30,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Define detail-pane state contracts and app-level navigation tests
 - [x] 01-02-PLAN.md — Add service-file content fetching and fallback tests
-- [ ] 01-03-PLAN.md — Wire pane focus, mode switching, and detail UI indicators
+- [x] 01-03-PLAN.md — Wire pane focus, mode switching, and detail UI indicators
 **UI hint**: yes
 
 ## Progress

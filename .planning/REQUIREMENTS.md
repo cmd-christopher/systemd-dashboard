@@ -7,7 +7,7 @@
 
 ### Detail Pane Content
 
-- [ ] **DTL-01**: User can switch the detail view bottom pane between `Logs` and `Service File` content modes.
+- [x] **DTL-01**: User can switch the detail view bottom pane between `Logs` and `Service File` content modes.
 - [x] **DTL-02**: When entering detail view, the default bottom-pane content mode is `Logs`.
 - [x] **DTL-03**: In `Service File` mode, the bottom pane shows readable service unit file contents for the selected timer's service unit.
 
@@ -19,8 +19,8 @@
 
 ### Detail UI Feedback
 
-- [ ] **UI-01**: Detail view clearly indicates which pane is active.
-- [ ] **UI-02**: Detail view clearly indicates the current bottom-pane content mode (`Logs` or `Service File`).
+- [x] **UI-01**: Detail view clearly indicates which pane is active.
+- [x] **UI-02**: Detail view clearly indicates the current bottom-pane content mode (`Logs` or `Service File`).
 
 ## v2 Requirements
 
@@ -41,14 +41,14 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DTL-01 | Phase 1 | Pending |
+| DTL-01 | Phase 1 | Complete |
 | DTL-02 | Phase 1 | Complete |
 | DTL-03 | Phase 1 | Complete |
 | NAV-01 | Phase 1 | Complete |
 | NAV-02 | Phase 1 | Complete |
 | NAV-03 | Phase 1 | Complete |
-| UI-01 | Phase 1 | Pending |
-| UI-02 | Phase 1 | Pending |
+| UI-01 | Phase 1 | Complete |
+| UI-02 | Phase 1 | Complete |
 
 **Coverage:**
 - v1 requirements: 8 total
