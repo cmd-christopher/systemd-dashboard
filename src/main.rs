@@ -2,8 +2,10 @@ mod app;
 mod systemd;
 mod ui;
 
-use crate::app::{App, ViewMode};
-use crate::systemd::{fetch_timer_logs, fetch_timer_status, fetch_timers};
+use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
+use crate::systemd::{
+    fetch_service_file_content, fetch_timer_logs, fetch_timer_status, fetch_timers,
+};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
@@ -74,7 +76,6 @@ async fn run_app<B: ratatui::backend::Backend>(
                                 let activates = timer.activates.clone();
                                 app.detail_status = fetch_timer_status(&unit).await;
                                 app.detail_logs = fetch_timer_logs(&activates).await;
-                                app.detail_scroll = app.detail_logs.lines().count().saturating_sub(1);
                                 app.enter_detail();
                             }
                         }
@@ -93,17 +94,35 @@ async fn run_app<B: ratatui::backend::Backend>(
                         _ => {}
                     },
                     ViewMode::Detail => match key.code {
-                        KeyCode::Esc | KeyCode::Left | KeyCode::Backspace => {
-                            app.exit_detail();
+                        KeyCode::Esc | KeyCode::Backspace => app.exit_detail(),
+                        KeyCode::Tab => app.toggle_detail_focus(),
+                        KeyCode::Left | KeyCode::Up
+                            if matches!(app.detail_focus, DetailPaneFocus::Top) =>
+                        {
+                            app.select_previous_detail_content();
+                            refresh_detail_content(app, true).await;
                         }
-                        KeyCode::Down | KeyCode::Char('j') => {
-                            let max = app.detail_logs.lines().count().saturating_sub(1);
-                            if app.detail_scroll < max {
-                                app.detail_scroll += 1;
-                            }
+                        KeyCode::Right | KeyCode::Down
+                            if matches!(app.detail_focus, DetailPaneFocus::Top) =>
+                        {
+                            app.select_next_detail_content();
+                            refresh_detail_content(app, true).await;
                         }
-                        KeyCode::Up | KeyCode::Char('k') => {
-                            app.detail_scroll = app.detail_scroll.saturating_sub(1);
+                        KeyCode::Left | KeyCode::Up
+                            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
+                        {
+                            app.scroll_detail_up();
+                        }
+                        KeyCode::Right | KeyCode::Down | KeyCode::Char('j')
+                            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
+                        {
+                            let max_lines = detail_content_max_lines(app);
+                            app.scroll_detail_down(max_lines);
+                        }
+                        KeyCode::Char('k')
+                            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
+                        {
+                            app.scroll_detail_up();
                         }
                         KeyCode::Char('q') => return Ok(()),
                         _ => {}
@@ -124,13 +143,15 @@ async fn run_app<B: ratatui::backend::Backend>(
             if let ViewMode::Detail = app.mode {
                 if let Some(timer) = app.selected_timer() {
                     let unit = timer.unit.clone();
-                    let activates = timer.activates.clone();
                     app.detail_status = fetch_timer_status(&unit).await;
-                    app.detail_logs = fetch_timer_logs(&activates).await;
+                    let previous_scroll = app.detail_scroll;
+                    refresh_detail_content(app, false).await;
                     
                     let new_max = app.detail_logs.lines().count().saturating_sub(1);
-                    if app.detail_scroll >= new_max.saturating_sub(2) {
+                    if previous_scroll >= new_max.saturating_sub(2) {
                         app.detail_scroll = new_max;
+                    } else {
+                        app.detail_scroll = previous_scroll.min(new_max);
                     }
                 }
             }
@@ -140,6 +161,23 @@ async fn run_app<B: ratatui::backend::Backend>(
 
         if app.should_quit {
             return Ok(());
+        }
+    }
+}
+
+fn detail_content_max_lines(app: &App) -> usize {
+    app.detail_logs.lines().count().saturating_sub(1)
+}
+
+async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
+    if let Some(timer) = app.selected_timer() {
+        let activates = timer.activates.clone();
+        app.detail_logs = match app.detail_content_mode {
+            DetailContentMode::Logs => fetch_timer_logs(&activates).await,
+            DetailContentMode::ServiceFile => fetch_service_file_content(&activates).await,
+        };
+        if reset_scroll {
+            app.detail_scroll = 0;
         }
     }
 }
