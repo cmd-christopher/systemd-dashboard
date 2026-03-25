@@ -16,14 +16,15 @@ A user can quickly inspect and control a selected timer without leaving the term
 - ✓ User can open a timer detail screen and inspect selected timer metadata — existing
 - ✓ User can view recent logs for the selected timer's service unit — existing
 - ✓ User can start/stop a timer from the list using keyboard controls — existing
+- ✓ In detail view, the bottom pane can display either service logs or service unit file contents — validated in Phase 01
+- ✓ Detail view defaults the bottom-pane content to logs — validated in Phase 01
+- ✓ `Tab` toggles active selection between top and bottom panes in detail view — validated in Phase 01
+- ✓ While top pane is active, arrow keys change the bottom-pane source between Logs and Service File — validated in Phase 01
+- ✓ Detail view clearly indicates current bottom-pane source and active pane — validated in Phase 01
 
 ### Active
 
-- [ ] In detail view, the bottom pane can display either service logs or the selected service unit file contents.
-- [ ] The default bottom-pane content in detail view is logs.
-- [ ] Pressing `Tab` in detail view toggles active selection between top pane and bottom pane.
-- [ ] When top pane is active, arrow keys switch bottom-pane source between Logs and Service File.
-- [ ] Bottom-pane source selection is visible in the UI so users know which source is currently shown.
+(None currently — Phase 01 requirements validated)
 
 ### Out of Scope
 
@@ -46,9 +47,9 @@ The project is a brownfield Rust TUI codebase using Ratatui + Crossterm + Tokio 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Keep detail layout as top status pane + bottom content pane | Existing users already understand this structure and it fits current UI rendering | — Pending |
-| Default bottom-pane source to Logs | Preserves current behavior and avoids surprising existing users | — Pending |
-| Use `Tab` to change active pane and arrow keys in top pane to change source | Matches keyboard-first TUI expectations and keeps controls discoverable | — Pending |
+| Keep detail layout as top status pane + bottom content pane | Existing users already understand this structure and it fits current UI rendering | ✓ Good |
+| Default bottom-pane source to Logs | Preserves current behavior and avoids surprising existing users | ✓ Good |
+| Use `Tab` to change active pane and arrow keys in top pane to change source | Matches keyboard-first TUI expectations and keeps controls discoverable | ✓ Good |
 
 ## Evolution
 
@@ -68,4 +69,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-25 after initialization*
+*Last updated: 2026-03-25 after Phase 01 completion*
