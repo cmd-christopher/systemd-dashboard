@@ -98,6 +98,16 @@ async fn run_app<B: ratatui::backend::Backend>(
             if let Ok(timers) = fetch_timers().await {
                 app.timers = timers;
             }
+            
+            if let ViewMode::Detail = app.mode {
+                if let Some(timer) = app.selected_timer() {
+                    let unit = timer.unit.clone();
+                    let activates = timer.activates.clone();
+                    app.detail_status = fetch_timer_status(&unit).await;
+                    app.detail_logs = fetch_timer_logs(&activates).await;
+                }
+            }
+
             last_refresh = Instant::now();
         }
 
