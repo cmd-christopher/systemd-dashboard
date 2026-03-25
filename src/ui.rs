@@ -25,7 +25,7 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
 fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     let selected_style = Style::default().add_modifier(Modifier::REVERSED);
     let normal_style = Style::default().bg(Color::Blue);
-    let header_cells = ["Unit", "Activates", "Last Run", "Next Run", "Status"]
+    let header_cells = ["Unit", "Schedule", "Last Run", "Next Run", "Status"]
         .iter()
         .map(|h| Cell::from(*h).style(Style::default().fg(Color::Black).add_modifier(Modifier::BOLD)));
     let header = Row::new(header_cells)
@@ -43,20 +43,20 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
 
         let cells = vec![
             Cell::from(item.unit.clone()).style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            Cell::from(item.activates.clone()).style(Style::default().fg(Color::LightBlue)),
-            Cell::from(item.last.clone()).style(Style::default().fg(Color::DarkGray)),
-            Cell::from(item.next.clone()).style(Style::default().fg(Color::Cyan)),
+            Cell::from(item.schedule.clone()).style(Style::default().fg(Color::Yellow)),
+            Cell::from(item.last_rel.clone()).style(Style::default().fg(Color::DarkGray)),
+            Cell::from(item.next_rel.clone()).style(Style::default().fg(Color::Cyan)),
             status_cell,
         ];
         Row::new(cells).height(1)
     });
 
     let t = Table::new(rows, [
-        Constraint::Percentage(20),
-        Constraint::Percentage(20),
-        Constraint::Percentage(25),
-        Constraint::Percentage(25),
-        Constraint::Percentage(10),
+        Constraint::Percentage(25), // Unit
+        Constraint::Percentage(25), // Schedule
+        Constraint::Percentage(15), // Last Run
+        Constraint::Percentage(15), // Next Run
+        Constraint::Percentage(20), // Status
     ])
     .header(header)
     .block(
@@ -82,11 +82,20 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
 
     let timer = app.selected_timer().map(|t| t.unit.as_str()).unwrap_or("Unknown");
     
+    let status_text = if let Some(t) = app.selected_timer() {
+        format!(
+            "Unit: {}\nService: {}\nSchedule: {}\n\nLast Run: {} ({})\nNext Run: {} ({})\nStatus: {}",
+            t.unit, t.activates, t.schedule, t.last_abs, t.last_rel, t.next_abs, t.next_rel, t.status
+        )
+    } else {
+        app.detail_status.clone()
+    };
+
     let status_block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Cyan))
         .title(format!(" Status: {} ", timer));
-    let status_para = Paragraph::new(app.detail_status.as_str())
+    let status_para = Paragraph::new(status_text)
         .block(status_block)
         .wrap(ratatui::widgets::Wrap { trim: true });
     f.render_widget(status_para, chunks[0]);
