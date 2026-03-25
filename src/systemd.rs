@@ -183,3 +183,20 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_service_file_output;
+
+    #[test]
+    fn service_file_output_preserves_successful_stdout() {
+        let output = normalize_service_file_output(b"[Unit]\nDescription=Example\n", b"", true);
+        assert_eq!(output, "[Unit]\nDescription=Example\n");
+    }
+
+    #[test]
+    fn service_file_output_reports_command_stderr() {
+        let output = normalize_service_file_output(b"", b"No files found\n", false);
+        assert_eq!(output, "Service file unavailable: No files found");
+    }
+}
