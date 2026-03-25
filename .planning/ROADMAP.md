@@ -12,7 +12,7 @@ This milestone delivers a complete detail-view interaction upgrade so users can 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Detail Pane Mode Switching** - Deliver the full detail-view pane switching workflow, including navigation, content rendering, and UI feedback.
+- [x] **Phase 1: Detail Pane Mode Switching** - Deliver the full detail-view pane switching workflow, including navigation, content rendering, and UI feedback.
 
 ## Phase Details
 
@@ -40,4 +40,4 @@ Phases execute in numeric order: 1 → 1.1 → 1.2 → 2
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Detail Pane Mode Switching | 1/3 | In Progress | 2026-03-25 |
+| 1. Detail Pane Mode Switching | 3/3 | Complete | 2026-03-25 |
