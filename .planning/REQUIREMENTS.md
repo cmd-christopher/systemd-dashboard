@@ -8,14 +8,14 @@
 ### Detail Pane Content
 
 - [ ] **DTL-01**: User can switch the detail view bottom pane between `Logs` and `Service File` content modes.
-- [ ] **DTL-02**: When entering detail view, the default bottom-pane content mode is `Logs`.
-- [ ] **DTL-03**: In `Service File` mode, the bottom pane shows readable service unit file contents for the selected timer's service unit.
+- [x] **DTL-02**: When entering detail view, the default bottom-pane content mode is `Logs`.
+- [x] **DTL-03**: In `Service File` mode, the bottom pane shows readable service unit file contents for the selected timer's service unit.
 
 ### Detail Navigation
 
-- [ ] **NAV-01**: User can press `Tab` in detail view to toggle active focus between top pane and bottom pane.
-- [ ] **NAV-02**: When top pane is active, `Left/Right` or `Up/Down` arrow keys change the bottom-pane content mode.
-- [ ] **NAV-03**: When bottom pane is active, arrow keys scroll content instead of changing content mode.
+- [x] **NAV-01**: User can press `Tab` in detail view to toggle active focus between top pane and bottom pane.
+- [x] **NAV-02**: When top pane is active, `Left/Right` or `Up/Down` arrow keys change the bottom-pane content mode.
+- [x] **NAV-03**: When bottom pane is active, arrow keys scroll content instead of changing content mode.
 
 ### Detail UI Feedback
 
@@ -42,11 +42,11 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | DTL-01 | Phase 1 | Pending |
-| DTL-02 | Phase 1 | Pending |
-| DTL-03 | Phase 1 | Pending |
-| NAV-01 | Phase 1 | Pending |
-| NAV-02 | Phase 1 | Pending |
-| NAV-03 | Phase 1 | Pending |
+| DTL-02 | Phase 1 | Complete |
+| DTL-03 | Phase 1 | Complete |
+| NAV-01 | Phase 1 | Complete |
+| NAV-02 | Phase 1 | Complete |
+| NAV-03 | Phase 1 | Complete |
 | UI-01 | Phase 1 | Pending |
 | UI-02 | Phase 1 | Pending |
 

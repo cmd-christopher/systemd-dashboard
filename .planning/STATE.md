@@ -1,3 +1,17 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: Ready to execute
+stopped_at: Completed 01-detail-pane-mode-switching-02-PLAN.md
+last_updated: "2026-03-25T15:45:25.660Z"
+progress:
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 3
+  completed_plans: 2
+---
+
 # Project State
 
 ## Project Reference
@@ -5,33 +19,33 @@
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** A user can quickly inspect and control a selected timer without leaving the terminal.
-**Current focus:** Phase 1 - Detail Pane Mode Switching
+**Current focus:** Phase 01 — detail-pane-mode-switching
 
 ## Current Position
 
-Phase: 1 of 1 (Detail Pane Mode Switching)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-25 — Roadmap created and v1 requirements mapped to Phase 1
-
-Progress: [░░░░░░░░░░] 0%
+Phase: 01 (detail-pane-mode-switching) — EXECUTING
+Plan: 3 of 3
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: 0 min
-- Total execution time: 0.0 hours
+
+- Total plans completed: 1
+- Average duration: 4 min
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 | 0 | 0 min | 0 min |
+| 1 | 1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: none
+
+- Last 5 plans: 01-detail-pane-mode-switching-01 (4 min)
 - Trend: Stable
+
+| Phase 01-detail-pane-mode-switching P01 | 4min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -43,6 +57,9 @@ Recent decisions affecting current work:
 - Phase 1: Keep the existing split detail layout and extend it with pane focus and bottom-pane mode switching.
 - Phase 1: Default the bottom pane to logs to preserve existing behavior.
 - Phase 1: Use `Tab` for pane focus and arrow keys in the top pane for content-mode changes.
+- [Phase 01-detail-pane-mode-switching]: Detail view resets to Top focus, Logs mode, and scroll position zero on both enter and exit.
+- [Phase 01-detail-pane-mode-switching]: Detail content switching is centralized in App helper methods instead of direct field mutation in the event loop.
+- [Phase 01-detail-pane-mode-switching]: Service-file output normalization stays in a pure helper so byte-level tests can cover systemctl results without live system state.
 
 ### Pending Todos
 
@@ -54,6 +71,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25 00:00
-Stopped at: Initial roadmap creation completed
+Last session: 2026-03-25T15:45:25.658Z
+Stopped at: Completed 01-detail-pane-mode-switching-02-PLAN.md
 Resume file: None
