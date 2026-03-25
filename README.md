@@ -6,7 +6,7 @@ A high-performance, terminal-based graphical tool for visualizing and managing *
 
 ## Features
 
-- **User-Specific Focus**: Specifically designed to manage `systemctl --user` timers (e.g., `cece-gmail`).
+- **User-Specific Focus**: Specifically designed to manage `systemctl --user` timers.
 - **Real-Time Monitoring**: Periodic 60-second refreshes keep your timer statuses up to date.
 - **Asynchronous Data Fetching**: Non-blocking extraction of systemd data and logs using `tokio`.
 - **Detailed Drill-Down**: 

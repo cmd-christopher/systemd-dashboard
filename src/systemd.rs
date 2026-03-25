@@ -169,3 +169,17 @@ pub async fn fetch_timer_logs(service_unit: &str) -> String {
         Err(e) => format!("Error: {}", e),
     }
 }
+
+pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
+    let action = if start { "start" } else { "stop" };
+    let output = Command::new("systemctl")
+        .args(&["--user", action, timer_unit])
+        .output()
+        .await
+        .map_err(|e| format!("Failed to toggle timer: {}", e))?;
+
+    if !output.status.success() {
+        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+    }
+    Ok(())
+}

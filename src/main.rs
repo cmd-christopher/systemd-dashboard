@@ -78,6 +78,18 @@ async fn run_app<B: ratatui::backend::Backend>(
                                 app.enter_detail();
                             }
                         }
+                        KeyCode::Char(' ') => {
+                            if let Some(timer) = app.selected_timer() {
+                                let unit = timer.unit.clone();
+                                let is_active = timer.status == "Active" || timer.status == "Waiting";
+                                
+                                let _ = crate::systemd::toggle_timer(&unit, !is_active).await;
+                                
+                                if let Ok(timers) = fetch_timers().await {
+                                    app.timers = timers;
+                                }
+                            }
+                        }
                         _ => {}
                     },
                     ViewMode::Detail => match key.code {
