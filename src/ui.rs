@@ -27,7 +27,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     let normal_style = Style::default().bg(Color::Blue);
     let header_cells = ["Unit", "Activates", "Last Run", "Next Run", "Status"]
         .iter()
-        .map(|h| Cell::from(*h).style(Style::default().fg(Color::Yellow)));
+        .map(|h| Cell::from(*h).style(Style::default().fg(Color::Black).add_modifier(Modifier::BOLD)));
     let header = Row::new(header_cells)
         .style(normal_style)
         .height(1)
