@@ -74,6 +74,7 @@ async fn run_app<B: ratatui::backend::Backend>(
                                 let activates = timer.activates.clone();
                                 app.detail_status = fetch_timer_status(&unit).await;
                                 app.detail_logs = fetch_timer_logs(&activates).await;
+                                app.detail_scroll = app.detail_logs.lines().count().saturating_sub(1);
                                 app.enter_detail();
                             }
                         }
@@ -82,6 +83,15 @@ async fn run_app<B: ratatui::backend::Backend>(
                     ViewMode::Detail => match key.code {
                         KeyCode::Esc | KeyCode::Left | KeyCode::Backspace => {
                             app.exit_detail();
+                        }
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            let max = app.detail_logs.lines().count().saturating_sub(1);
+                            if app.detail_scroll < max {
+                                app.detail_scroll += 1;
+                            }
+                        }
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            app.detail_scroll = app.detail_scroll.saturating_sub(1);
                         }
                         KeyCode::Char('q') => return Ok(()),
                         _ => {}
@@ -105,6 +115,11 @@ async fn run_app<B: ratatui::backend::Backend>(
                     let activates = timer.activates.clone();
                     app.detail_status = fetch_timer_status(&unit).await;
                     app.detail_logs = fetch_timer_logs(&activates).await;
+                    
+                    let new_max = app.detail_logs.lines().count().saturating_sub(1);
+                    if app.detail_scroll >= new_max.saturating_sub(2) {
+                        app.detail_scroll = new_max;
+                    }
                 }
             }
 

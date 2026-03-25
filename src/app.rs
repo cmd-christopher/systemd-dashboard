@@ -13,6 +13,7 @@ pub struct App {
     pub detail_logs: String,
     pub should_quit: bool,
     pub error: Option<String>,
+    pub detail_scroll: usize,
 }
 
 impl App {
@@ -25,6 +26,7 @@ impl App {
             detail_logs: String::new(),
             should_quit: false,
             error: None,
+            detail_scroll: 0,
         }
     }
 

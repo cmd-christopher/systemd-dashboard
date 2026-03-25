@@ -104,10 +104,20 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Green))
         .title(" Recent Logs ");
-    let logs_para = Paragraph::new(app.detail_logs.as_str())
+
+    let lines: Vec<ratatui::widgets::ListItem> = app.detail_logs
+        .lines()
+        .map(|line| ratatui::widgets::ListItem::new(line))
+        .collect();
+
+    let logs_list = ratatui::widgets::List::new(lines)
         .block(logs_block)
-        .wrap(ratatui::widgets::Wrap { trim: true });
-    f.render_widget(logs_para, chunks[1]);
+        .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+
+    let mut logs_state = ratatui::widgets::ListState::default();
+    logs_state.select(Some(app.detail_scroll));
+
+    f.render_stateful_widget(logs_list, chunks[1], &mut logs_state);
 }
 
 fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
