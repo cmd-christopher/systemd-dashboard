@@ -1,8 +1,21 @@
 use crate::systemd::TimerInfo;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ViewMode {
     List,
     Detail,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DetailPaneFocus {
+    Top,
+    Bottom,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DetailContentMode {
+    Logs,
+    ServiceFile,
 }
 
 pub struct App {
@@ -11,6 +24,8 @@ pub struct App {
     pub selected_index: usize,
     pub detail_status: String,
     pub detail_logs: String,
+    pub detail_focus: DetailPaneFocus,
+    pub detail_content_mode: DetailContentMode,
     pub should_quit: bool,
     pub error: Option<String>,
     pub detail_scroll: usize,
@@ -24,6 +39,8 @@ impl App {
             selected_index: 0,
             detail_status: String::new(),
             detail_logs: String::new(),
+            detail_focus: DetailPaneFocus::Top,
+            detail_content_mode: DetailContentMode::Logs,
             should_quit: false,
             error: None,
             detail_scroll: 0,
@@ -54,12 +71,44 @@ impl App {
 
     pub fn enter_detail(&mut self) {
         self.mode = ViewMode::Detail;
+        self.detail_focus = DetailPaneFocus::Top;
+        self.detail_content_mode = DetailContentMode::Logs;
+        self.detail_scroll = 0;
     }
 
     pub fn exit_detail(&mut self) {
         self.mode = ViewMode::List;
         self.detail_status.clear();
         self.detail_logs.clear();
+        self.detail_focus = DetailPaneFocus::Top;
+        self.detail_content_mode = DetailContentMode::Logs;
+        self.detail_scroll = 0;
+    }
+
+    pub fn toggle_detail_focus(&mut self) {
+        self.detail_focus = match self.detail_focus {
+            DetailPaneFocus::Top => DetailPaneFocus::Bottom,
+            DetailPaneFocus::Bottom => DetailPaneFocus::Top,
+        };
+    }
+
+    pub fn select_next_detail_content(&mut self) {
+        self.detail_content_mode = match self.detail_content_mode {
+            DetailContentMode::Logs => DetailContentMode::ServiceFile,
+            DetailContentMode::ServiceFile => DetailContentMode::Logs,
+        };
+    }
+
+    pub fn select_previous_detail_content(&mut self) {
+        self.select_next_detail_content();
+    }
+
+    pub fn scroll_detail_down(&mut self, max_lines: usize) {
+        self.detail_scroll = self.detail_scroll.saturating_add(1).min(max_lines);
+    }
+
+    pub fn scroll_detail_up(&mut self) {
+        self.detail_scroll = self.detail_scroll.saturating_sub(1);
     }
 
     pub fn selected_timer(&self) -> Option<&TimerInfo> {
