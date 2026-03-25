@@ -12,13 +12,18 @@ A high-performance, terminal-based graphical tool for visualizing and managing *
 - **Detailed Drill-Down**: 
     - **Status View**: Deep dive into timer properties via `systemctl show`.
     - **Live Logs**: View the last 50 journal entries for any timer's associated service.
+    - **Service File View**: Switch the bottom pane between `Logs` and `Service File`.
 - **Visual Clarity**: Color-coded columns and Unicode status icons (✔, ⏳, ⏸) for instant readability.
 
 ## Keybindings
 
 - `↑` / `↓` or `j` / `k`: Navigate the timer list.
 - `Enter`: Open the detailed view for the selected timer.
-- `Esc` / `Left` / `Backspace`: Return to the list view from details.
+- `Tab`: Toggle focus between the top detail pane and the bottom content pane.
+- Top pane active: `Left` / `Up` switches the bottom pane to the previous mode, and `Right` / `Down` switches to the next mode between `Logs` and `Service File`.
+- Bottom pane active: `Left` / `Right` / `Up` / `Down` scroll the current content without exiting detail view.
+- Bottom pane active: `j` / `k` provide equivalent scrolling shortcuts.
+- `Esc` / `Backspace`: Return to the list view from details.
 - `q`: Quit the application.
 
 ## Installation

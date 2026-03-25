@@ -1,10 +1,13 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
+    text::{Line, Span},
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState},
+    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState, Wrap},
     Frame,
 };
-use crate::app::{App, ViewMode};
+use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
+
+const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
 
 pub fn draw_ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
@@ -80,12 +83,43 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(area);
 
-    let timer = app.selected_timer().map(|t| t.unit.as_str()).unwrap_or("Unknown");
-    
+    let timer = app
+        .selected_timer()
+        .map(|t| t.unit.as_str())
+        .unwrap_or("Unknown");
+    let top_active = matches!(app.detail_focus, DetailPaneFocus::Top);
+    let bottom_active = matches!(app.detail_focus, DetailPaneFocus::Bottom);
+    let active_border = Style::default().fg(Color::Yellow);
+    let inactive_border = Style::default().fg(Color::DarkGray);
+    let logs_style = if matches!(app.detail_content_mode, DetailContentMode::Logs) {
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::Gray)
+    };
+    let service_file_style = if matches!(app.detail_content_mode, DetailContentMode::ServiceFile) {
+        Style::default()
+            .fg(Color::Yellow)
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::Gray)
+    };
+    let (controls_prefix, controls_suffix) = DETAIL_CONTROLS_TITLE
+        .split_once("Logs | Service File")
+        .unwrap_or(("Detail Controls [", "]"));
     let status_text = if let Some(t) = app.selected_timer() {
         format!(
-            "Unit: {}\nService: {}\nSchedule: {}\n\nLast Run: {} ({})\nNext Run: {} ({})\nStatus: {}",
-            t.unit, t.activates, t.schedule, t.last_abs, t.last_rel, t.next_abs, t.next_rel, t.status
+            "Unit: {}\nService: {}\nSchedule: {}\n\nLast Run: {} ({})\nNext Run: {} ({})\nStatus: {}\n\n{}",
+            t.unit,
+            t.activates,
+            t.schedule,
+            t.last_abs,
+            t.last_rel,
+            t.next_abs,
+            t.next_rel,
+            t.status,
+            app.detail_status
         )
     } else {
         app.detail_status.clone()
@@ -93,31 +127,47 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
 
     let status_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan))
-        .title(format!(" Status: {} ", timer));
+        .border_style(if top_active {
+            active_border
+        } else {
+            inactive_border
+        })
+        .title(Line::from(vec![
+            Span::raw(" Status: "),
+            Span::styled(timer, Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" "),
+        ]))
+        .title(Line::from(vec![
+            Span::raw(controls_prefix),
+            Span::styled("Logs", logs_style),
+            Span::raw(" | "),
+            Span::styled("Service File", service_file_style),
+            Span::raw(controls_suffix),
+        ]));
     let status_para = Paragraph::new(status_text)
         .block(status_block)
-        .wrap(ratatui::widgets::Wrap { trim: true });
+        .wrap(Wrap { trim: true });
     f.render_widget(status_para, chunks[0]);
 
+    let bottom_title = match app.detail_content_mode {
+        DetailContentMode::Logs => "Bottom Pane: Logs",
+        DetailContentMode::ServiceFile => "Bottom Pane: Service File",
+    };
     let logs_block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Green))
-        .title(" Recent Logs ");
+        .border_style(if bottom_active {
+            active_border
+        } else {
+            inactive_border
+        })
+        .title(bottom_title);
 
-    let lines: Vec<ratatui::widgets::ListItem> = app.detail_logs
-        .lines()
-        .map(|line| ratatui::widgets::ListItem::new(line))
-        .collect();
-
-    let logs_list = ratatui::widgets::List::new(lines)
+    let logs_list = Paragraph::new(app.detail_logs.as_str())
         .block(logs_block)
-        .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+        .wrap(Wrap { trim: false })
+        .scroll((app.detail_scroll as u16, 0));
 
-    let mut logs_state = ratatui::widgets::ListState::default();
-    logs_state.select(Some(app.detail_scroll));
-
-    f.render_stateful_widget(logs_list, chunks[1], &mut logs_state);
+    f.render_widget(logs_list, chunks[1]);
 }
 
 fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
