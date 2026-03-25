@@ -170,6 +170,41 @@ pub async fn fetch_timer_logs(service_unit: &str) -> String {
     }
 }
 
+pub async fn fetch_service_file_content(service_unit: &str) -> String {
+    match Command::new("systemctl")
+        .args(&["--user", "cat", service_unit, "--no-pager"])
+        .output()
+        .await
+    {
+        Ok(output) => normalize_service_file_output(
+            &output.stdout,
+            &output.stderr,
+            output.status.success(),
+        ),
+        Err(error) => format!("Service file unavailable: {}", error),
+    }
+}
+
+fn normalize_service_file_output(stdout: &[u8], stderr: &[u8], success: bool) -> String {
+    let stdout = String::from_utf8_lossy(stdout).to_string();
+    if success && !stdout.trim().is_empty() {
+        return stdout;
+    }
+
+    let detail = if success {
+        "empty output".to_string()
+    } else {
+        let stderr = String::from_utf8_lossy(stderr).trim().to_string();
+        if stderr.is_empty() {
+            "empty output".to_string()
+        } else {
+            stderr
+        }
+    };
+
+    format!("Service file unavailable: {}", detail)
+}
+
 pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
     let action = if start { "start" } else { "stop" };
     let output = Command::new("systemctl")
