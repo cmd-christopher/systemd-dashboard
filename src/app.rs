@@ -66,3 +66,66 @@ impl App {
         self.timers.get(self.selected_index)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{App, DetailContentMode, DetailPaneFocus};
+
+    #[test]
+    fn detail_view_defaults_to_logs_mode() {
+        let mut app = App::new();
+
+        app.enter_detail();
+
+        assert!(matches!(app.mode, super::ViewMode::Detail));
+        assert_eq!(app.detail_focus, DetailPaneFocus::Top);
+        assert_eq!(app.detail_content_mode, DetailContentMode::Logs);
+        assert_eq!(app.detail_scroll, 0);
+    }
+
+    #[test]
+    fn detail_focus_toggles_between_panes() {
+        let mut app = App::new();
+
+        app.enter_detail();
+        app.toggle_detail_focus();
+        assert_eq!(app.detail_focus, DetailPaneFocus::Bottom);
+
+        app.toggle_detail_focus();
+        assert_eq!(app.detail_focus, DetailPaneFocus::Top);
+    }
+
+    #[test]
+    fn detail_content_mode_switches_between_logs_and_service_file() {
+        let mut app = App::new();
+
+        app.enter_detail();
+        app.select_next_detail_content();
+        assert_eq!(app.detail_content_mode, DetailContentMode::ServiceFile);
+
+        app.select_previous_detail_content();
+        assert_eq!(app.detail_content_mode, DetailContentMode::Logs);
+    }
+
+    #[test]
+    fn detail_scroll_helpers_clamp_to_valid_bounds() {
+        let mut app = App::new();
+
+        app.enter_detail();
+        app.scroll_detail_down(3);
+        assert_eq!(app.detail_scroll, 1);
+
+        app.scroll_detail_down(3);
+        app.scroll_detail_down(3);
+        app.scroll_detail_down(3);
+        assert_eq!(app.detail_scroll, 3);
+
+        app.scroll_detail_up();
+        assert_eq!(app.detail_scroll, 2);
+
+        app.scroll_detail_up();
+        app.scroll_detail_up();
+        app.scroll_detail_up();
+        assert_eq!(app.detail_scroll, 0);
+    }
+}
