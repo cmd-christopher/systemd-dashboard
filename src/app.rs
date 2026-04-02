@@ -29,6 +29,7 @@ pub struct App {
     pub should_quit: bool,
     pub error: Option<String>,
     pub detail_scroll: usize,
+    pub auto_scroll: bool,
 }
 
 impl App {
@@ -44,6 +45,7 @@ impl App {
             should_quit: false,
             error: None,
             detail_scroll: 0,
+            auto_scroll: true,
         }
     }
 
@@ -74,6 +76,7 @@ impl App {
         self.detail_focus = DetailPaneFocus::Top;
         self.detail_content_mode = DetailContentMode::Logs;
         self.detail_scroll = 0;
+        self.auto_scroll = true;
     }
 
     pub fn exit_detail(&mut self) {
@@ -83,6 +86,7 @@ impl App {
         self.detail_focus = DetailPaneFocus::Top;
         self.detail_content_mode = DetailContentMode::Logs;
         self.detail_scroll = 0;
+        self.auto_scroll = true;
     }
 
     pub fn toggle_detail_focus(&mut self) {
@@ -104,11 +108,18 @@ impl App {
     }
 
     pub fn scroll_detail_down(&mut self, max_lines: usize) {
-        self.detail_scroll = self.detail_scroll.saturating_add(1).min(max_lines);
+        if self.detail_scroll < max_lines {
+            self.detail_scroll += 1;
+        }
+        
+        if self.detail_scroll >= max_lines {
+            self.auto_scroll = true;
+        }
     }
 
     pub fn scroll_detail_up(&mut self) {
         self.detail_scroll = self.detail_scroll.saturating_sub(1);
+        self.auto_scroll = false;
     }
 
     pub fn selected_timer(&self) -> Option<&TimerInfo> {
@@ -176,5 +187,26 @@ mod tests {
         app.scroll_detail_up();
         app.scroll_detail_up();
         assert_eq!(app.detail_scroll, 0);
+    }
+
+    #[test]
+    fn detail_scroll_manages_auto_scroll_state() {
+        let mut app = App::new();
+
+        app.enter_detail();
+        assert!(app.auto_scroll);
+
+        // Scrolling up disables auto-scroll
+        app.scroll_detail_up();
+        assert!(!app.auto_scroll);
+
+        // Scrolling down to the max (simulated bottom) re-enables auto-scroll
+        app.scroll_detail_down(5); // scroll=0
+        app.scroll_detail_down(5); // scroll=1
+        app.scroll_detail_down(5); // scroll=2
+        app.scroll_detail_down(5); // scroll=3
+        app.scroll_detail_down(5); // scroll=4
+        app.scroll_detail_down(5); // scroll=5
+        assert!(app.auto_scroll);
     }
 }

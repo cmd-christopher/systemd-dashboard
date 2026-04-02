@@ -132,31 +132,25 @@ async fn run_app<B: ratatui::backend::Backend>(
         }
 
         if last_tick.elapsed() >= tick_rate {
-            last_tick = Instant::now();
-        }
-
-        if last_refresh.elapsed() >= Duration::from_secs(60) {
-            if let Ok(timers) = fetch_timers().await {
-                app.timers = timers;
-            }
-            
             if let ViewMode::Detail = app.mode {
-                if let Some(timer) = app.selected_timer() {
-                    let unit = timer.unit.clone();
-                    app.detail_status = fetch_timer_status(&unit).await;
-                    let previous_scroll = app.detail_scroll;
-                    refresh_detail_content(app, false).await;
-                    
-                    let new_max = app.detail_logs.lines().count().saturating_sub(1);
-                    if previous_scroll >= new_max.saturating_sub(2) {
-                        app.detail_scroll = new_max;
-                    } else {
-                        app.detail_scroll = previous_scroll.min(new_max);
+                // More frequent refresh for detail view to support "real-time" logs
+                if last_refresh.elapsed() >= Duration::from_secs(2) {
+                    if let Some(timer) = app.selected_timer() {
+                        let unit = timer.unit.clone();
+                        app.detail_status = fetch_timer_status(&unit).await;
+                        refresh_detail_content(app, false).await;
                     }
+                    last_refresh = Instant::now();
                 }
+            } else if last_refresh.elapsed() >= Duration::from_secs(60) {
+                // Slower refresh for the main list
+                if let Ok(timers) = fetch_timers().await {
+                    app.timers = timers;
+                }
+                last_refresh = Instant::now();
             }
 
-            last_refresh = Instant::now();
+            last_tick = Instant::now();
         }
 
         if app.should_quit {
@@ -178,6 +172,8 @@ async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
         };
         if reset_scroll {
             app.detail_scroll = 0;
+            // Auto-scroll only makes sense for logs
+            app.auto_scroll = matches!(app.detail_content_mode, DetailContentMode::Logs);
         }
     }
 }

@@ -162,6 +162,12 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .title(bottom_title);
 
+    if app.auto_scroll && matches!(app.detail_content_mode, DetailContentMode::Logs) {
+        let inner_height = chunks[1].height.saturating_sub(2) as usize;
+        let line_count = app.detail_logs.lines().count();
+        app.detail_scroll = line_count.saturating_sub(inner_height);
+    }
+
     let logs_list = Paragraph::new(app.detail_logs.as_str())
         .block(logs_block)
         .wrap(Wrap { trim: false })
