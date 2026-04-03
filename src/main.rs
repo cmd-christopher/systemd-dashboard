@@ -116,8 +116,7 @@ async fn run_app<B: ratatui::backend::Backend>(
                         KeyCode::Right | KeyCode::Down | KeyCode::Char('j')
                             if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
                         {
-                            let max_lines = detail_content_max_lines(app);
-                            app.scroll_detail_down(max_lines);
+                            app.scroll_detail_down();
                         }
                         KeyCode::Char('k')
                             if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
@@ -157,10 +156,6 @@ async fn run_app<B: ratatui::backend::Backend>(
             return Ok(());
         }
     }
-}
-
-fn detail_content_max_lines(app: &App) -> usize {
-    app.detail_logs.lines().count().saturating_sub(1)
 }
 
 async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
