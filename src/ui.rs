@@ -9,6 +9,58 @@ use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
 
+fn count_visual_lines(text: &str, max_width: u16) -> usize {
+    let max_width = max_width as usize;
+    if max_width == 0 {
+        return 0;
+    }
+    let mut total_lines = 0;
+
+    for line in text.lines() {
+        if line.is_empty() {
+            total_lines += 1;
+            continue;
+        }
+
+        let mut line_width = 0;
+        let words = line.split_inclusive(' ');
+
+        for word in words {
+            let word_len = word.chars().count();
+
+            if line_width + word_len > max_width {
+                if line_width > 0 {
+                    total_lines += 1;
+                    line_width = 0;
+                }
+
+                if word_len > max_width {
+                    let full_lines = word_len / max_width;
+                    let remainder = word_len % max_width;
+                    if remainder == 0 {
+                        total_lines += full_lines;
+                        // Avoid unused assignment warning; line_width is naturally 0 here,
+                        // but setting it triggers unused_assignment if it's the last token of the line
+                    } else {
+                        total_lines += full_lines;
+                        line_width = remainder;
+                    }
+                } else {
+                    line_width = word_len;
+                }
+            } else {
+                line_width += word_len;
+            }
+        }
+
+        if line_width > 0 {
+            total_lines += 1;
+        }
+    }
+
+    total_lines
+}
+
 pub fn draw_ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -162,10 +214,18 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .title(bottom_title);
 
+    let inner_width = chunks[1].width.saturating_sub(2);
+    let inner_height = chunks[1].height.saturating_sub(2) as usize;
+    let visual_lines = count_visual_lines(&app.detail_logs, inner_width);
+
+    app.detail_max_scroll = visual_lines.saturating_sub(inner_height);
+
+    if app.detail_scroll > app.detail_max_scroll {
+        app.detail_scroll = app.detail_max_scroll;
+    }
+
     if app.auto_scroll && matches!(app.detail_content_mode, DetailContentMode::Logs) {
-        let inner_height = chunks[1].height.saturating_sub(2) as usize;
-        let line_count = app.detail_logs.lines().count();
-        app.detail_scroll = line_count.saturating_sub(inner_height);
+        app.detail_scroll = app.detail_max_scroll;
     }
 
     let logs_list = Paragraph::new(app.detail_logs.as_str())

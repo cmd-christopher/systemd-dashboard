@@ -29,6 +29,7 @@ pub struct App {
     pub should_quit: bool,
     pub error: Option<String>,
     pub detail_scroll: usize,
+    pub detail_max_scroll: usize,
     pub auto_scroll: bool,
 }
 
@@ -45,6 +46,7 @@ impl App {
             should_quit: false,
             error: None,
             detail_scroll: 0,
+            detail_max_scroll: 0,
             auto_scroll: true,
         }
     }
@@ -76,6 +78,7 @@ impl App {
         self.detail_focus = DetailPaneFocus::Top;
         self.detail_content_mode = DetailContentMode::Logs;
         self.detail_scroll = 0;
+        self.detail_max_scroll = 0;
         self.auto_scroll = true;
     }
 
@@ -86,6 +89,7 @@ impl App {
         self.detail_focus = DetailPaneFocus::Top;
         self.detail_content_mode = DetailContentMode::Logs;
         self.detail_scroll = 0;
+        self.detail_max_scroll = 0;
         self.auto_scroll = true;
     }
 
@@ -107,12 +111,12 @@ impl App {
         self.select_next_detail_content();
     }
 
-    pub fn scroll_detail_down(&mut self, max_lines: usize) {
-        if self.detail_scroll < max_lines {
+    pub fn scroll_detail_down(&mut self) {
+        if self.detail_scroll < self.detail_max_scroll {
             self.detail_scroll += 1;
         }
         
-        if self.detail_scroll >= max_lines {
+        if self.detail_scroll >= self.detail_max_scroll {
             self.auto_scroll = true;
         }
     }
@@ -172,12 +176,13 @@ mod tests {
         let mut app = App::new();
 
         app.enter_detail();
-        app.scroll_detail_down(3);
+        app.detail_max_scroll = 3;
+        app.scroll_detail_down();
         assert_eq!(app.detail_scroll, 1);
 
-        app.scroll_detail_down(3);
-        app.scroll_detail_down(3);
-        app.scroll_detail_down(3);
+        app.scroll_detail_down();
+        app.scroll_detail_down();
+        app.scroll_detail_down();
         assert_eq!(app.detail_scroll, 3);
 
         app.scroll_detail_up();
@@ -194,6 +199,7 @@ mod tests {
         let mut app = App::new();
 
         app.enter_detail();
+        app.detail_max_scroll = 5;
         assert!(app.auto_scroll);
 
         // Scrolling up disables auto-scroll
@@ -201,12 +207,12 @@ mod tests {
         assert!(!app.auto_scroll);
 
         // Scrolling down to the max (simulated bottom) re-enables auto-scroll
-        app.scroll_detail_down(5); // scroll=0
-        app.scroll_detail_down(5); // scroll=1
-        app.scroll_detail_down(5); // scroll=2
-        app.scroll_detail_down(5); // scroll=3
-        app.scroll_detail_down(5); // scroll=4
-        app.scroll_detail_down(5); // scroll=5
+        app.scroll_detail_down(); // scroll=0
+        app.scroll_detail_down(); // scroll=1
+        app.scroll_detail_down(); // scroll=2
+        app.scroll_detail_down(); // scroll=3
+        app.scroll_detail_down(); // scroll=4
+        app.scroll_detail_down(); // scroll=5
         assert!(app.auto_scroll);
     }
 }
