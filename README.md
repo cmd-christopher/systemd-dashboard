@@ -2,7 +2,7 @@
 
 A high-performance, terminal-based graphical tool for visualizing and managing **user systemd timers**. Built with **Rust** and **Ratatui**, it provides a responsive and intuitive interface for monitoring your background tasks.
 
-![Screenshot Placeholder](https://via.placeholder.com/800x400?text=Systemd+Timer+Dashboard+TUI)
+![Systemd Timer Dashboard](dash-screenshot.png)
 
 ## Features
 
