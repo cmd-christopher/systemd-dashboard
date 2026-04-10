@@ -93,14 +93,14 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
             "Active" => Cell::from("✔ Active").style(Style::default().fg(Color::Green)),
             "Waiting" => Cell::from("⏳ Waiting").style(Style::default().fg(Color::DarkGray)),
             "Inactive" => Cell::from("⏸ Inactive").style(Style::default().fg(Color::Gray)),
-            _ => Cell::from(item.status.clone()).style(Style::default().fg(Color::Red)),
+            _ => Cell::from(item.status.as_str()).style(Style::default().fg(Color::Red)),
         };
 
         let cells = vec![
-            Cell::from(item.unit.clone()).style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
-            Cell::from(item.schedule.clone()).style(Style::default().fg(Color::Yellow)),
-            Cell::from(item.last_rel.clone()).style(Style::default().fg(Color::DarkGray)),
-            Cell::from(item.next_rel.clone()).style(Style::default().fg(Color::Cyan)),
+            Cell::from(item.unit.as_str()).style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Cell::from(item.schedule.as_str()).style(Style::default().fg(Color::Yellow)),
+            Cell::from(item.last_rel.as_str()).style(Style::default().fg(Color::DarkGray)),
+            Cell::from(item.next_rel.as_str()).style(Style::default().fg(Color::Cyan)),
             status_cell,
         ];
         Row::new(cells).height(1)
@@ -174,7 +174,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             app.detail_status
         )
     } else {
-        app.detail_status.clone()
+        app.detail_status.as_str().into()
     };
 
     let status_block = Block::default()
