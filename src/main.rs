@@ -52,8 +52,12 @@ async fn run_app<B: ratatui::backend::Backend>(
     let tick_rate = Duration::from_millis(250);
     
     // Initial fetch
-    if let Ok(timers) = fetch_timers().await {
-        app.timers = timers;
+    match fetch_timers().await {
+        Ok(timers) => {
+            app.timers = timers;
+            app.error = None;
+        }
+        Err(e) => app.error = Some(e),
     }
 
     loop {
@@ -65,6 +69,9 @@ async fn run_app<B: ratatui::backend::Backend>(
 
         if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
+                if app.error.is_some() {
+                    app.error = None;
+                }
                 match app.mode {
                     ViewMode::List => match key.code {
                         KeyCode::Char('q') => return Ok(()),
@@ -83,11 +90,16 @@ async fn run_app<B: ratatui::backend::Backend>(
                             if let Some(timer) = app.selected_timer() {
                                 let unit = timer.unit.clone();
                                 let is_active = timer.status == "Active" || timer.status == "Waiting";
-                                
-                                let _ = crate::systemd::toggle_timer(&unit, !is_active).await;
-                                
-                                if let Ok(timers) = fetch_timers().await {
-                                    app.timers = timers;
+
+                                match crate::systemd::toggle_timer(&unit, !is_active).await {
+                                    Ok(_) => {
+                                        app.error = None;
+                                        match fetch_timers().await {
+                                            Ok(timers) => app.timers = timers,
+                                            Err(e) => app.error = Some(e),
+                                        }
+                                    }
+                                    Err(e) => app.error = Some(e),
                                 }
                             }
                         }
@@ -143,8 +155,12 @@ async fn run_app<B: ratatui::backend::Backend>(
                 }
             } else if last_refresh.elapsed() >= Duration::from_secs(60) {
                 // Slower refresh for the main list
-                if let Ok(timers) = fetch_timers().await {
-                    app.timers = timers;
+                match fetch_timers().await {
+                    Ok(timers) => {
+                        app.timers = timers;
+                        app.error = None;
+                    }
+                    Err(e) => app.error = Some(e),
                 }
                 last_refresh = Instant::now();
             }
