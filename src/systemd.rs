@@ -322,7 +322,7 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{extract_timer_schedule, normalize_service_file_output};
+    use super::{extract_timer_schedule, format_time_abs, normalize_service_file_output};
 
     #[test]
     fn service_file_output_preserves_successful_stdout() {
@@ -358,5 +358,31 @@ mod tests {
         );
 
         assert_eq!(output, "*-*-* *:00/30:00, OnBootSec=5min");
+    }
+
+    #[test]
+    fn test_format_time_abs() {
+        // Case 1: None
+        assert_eq!(format_time_abs(None), "n/a");
+
+        // Case 2: Some(0)
+        assert_eq!(format_time_abs(Some(0)), "n/a");
+
+        // Case 3: Valid timestamp
+        // 1711111111 seconds is 2024-03-22 12:38:31 UTC
+        let ts_us = 1711111111 * 1_000_000;
+        let formatted = format_time_abs(Some(ts_us));
+
+        // Since the function uses Local timezone, we check if it matches the expected pattern
+        // rather than the exact string which might depend on the environment's timezone.
+        // However, in many CI/test environments, the timezone is UTC.
+        // The pattern is %Y-%m-%d %H:%M:%S (19 characters)
+        assert_eq!(formatted.len(), 19);
+        assert!(formatted.contains("-"));
+        assert!(formatted.contains(":"));
+
+        // If we want to be more specific and assume UTC for the test environment
+        // let expected = "2024-03-22 12:38:31";
+        // assert_eq!(formatted, expected);
     }
 }
