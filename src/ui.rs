@@ -64,13 +64,28 @@ fn count_visual_lines(text: &str, max_width: u16) -> usize {
 pub fn draw_ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(0)])
+        .constraints([Constraint::Min(0), Constraint::Length(1)])
         .split(f.size());
 
     match app.mode {
         ViewMode::List => draw_list(f, app, chunks[0]),
         ViewMode::Detail => draw_detail(f, app, chunks[0]),
     }
+
+    let help_text = match app.mode {
+        ViewMode::List => " q: Quit | \u{2191}/\u{2193} or j/k: Navigate | Enter: Details",
+        ViewMode::Detail => {
+            " Esc/Backspace: Back | q: Quit | Tab: Focus Pane | \u{2191}/\u{2193}/\u{2190}/\u{2192} or j/k: Navigate/Scroll"
+        }
+    };
+    let footer = Paragraph::new(help_text)
+        .style(
+            Style::default()
+                .fg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        )
+        .alignment(ratatui::layout::Alignment::Center);
+    f.render_widget(footer, chunks[1]);
 
     if let Some(err) = &app.error {
         draw_error(f, err, chunks[0]);
