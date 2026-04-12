@@ -257,6 +257,7 @@ fn push_schedule_value(schedules: &mut Vec<String>, key: &str, value: &str) {
 
 fn dedupe_schedule_values(values: Vec<String>) -> String {
     let mut deduped = Vec::new();
+    let mut seen = std::collections::HashSet::new();
 
     for value in values {
         let value = value.trim().to_string();
@@ -264,7 +265,8 @@ fn dedupe_schedule_values(values: Vec<String>) -> String {
             continue;
         }
 
-        if !deduped.contains(&value) {
+        if !seen.contains(&value) {
+            seen.insert(value.clone());
             deduped.push(value);
         }
     }
