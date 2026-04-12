@@ -9,10 +9,14 @@ use crate::systemd::{
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::{backend::CrosstermBackend, Terminal};
-use std::{error::Error, io, time::{Duration, Instant}};
+use ratatui::{Terminal, backend::CrosstermBackend};
+use std::{
+    error::Error,
+    io,
+    time::{Duration, Instant},
+};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -50,7 +54,7 @@ async fn run_app<B: ratatui::backend::Backend>(
     let mut last_tick = Instant::now();
     let mut last_refresh = Instant::now();
     let tick_rate = Duration::from_millis(250);
-    
+
     // Initial fetch
     match fetch_timers().await {
         Ok(timers) => {
@@ -81,15 +85,28 @@ async fn run_app<B: ratatui::backend::Backend>(
                             if let Some(timer) = app.selected_timer() {
                                 let unit = timer.unit.clone();
                                 let activates = timer.activates.clone();
-                                app.detail_status = fetch_timer_status(&unit).await;
-                                app.detail_logs = fetch_timer_logs(&activates).await;
+                                match fetch_timer_status(&unit).await {
+                                    Ok(status) => app.detail_status = status,
+                                    Err(e) => {
+                                        app.error = Some(e);
+                                        app.detail_status = "Error fetching status".to_string();
+                                    }
+                                }
+                                match fetch_timer_logs(&activates).await {
+                                    Ok(logs) => app.detail_logs = logs,
+                                    Err(e) => {
+                                        app.error = Some(e);
+                                        app.detail_logs = "Error fetching logs".to_string();
+                                    }
+                                }
                                 app.enter_detail();
                             }
                         }
                         KeyCode::Char(' ') => {
                             if let Some(timer) = app.selected_timer() {
                                 let unit = timer.unit.clone();
-                                let is_active = timer.status == "Active" || timer.status == "Waiting";
+                                let is_active =
+                                    timer.status == "Active" || timer.status == "Waiting";
 
                                 match crate::systemd::toggle_timer(&unit, !is_active).await {
                                     Ok(_) => {
@@ -148,7 +165,13 @@ async fn run_app<B: ratatui::backend::Backend>(
                 if last_refresh.elapsed() >= Duration::from_secs(2) {
                     if let Some(timer) = app.selected_timer() {
                         let unit = timer.unit.clone();
-                        app.detail_status = fetch_timer_status(&unit).await;
+                        match fetch_timer_status(&unit).await {
+                            Ok(status) => app.detail_status = status,
+                            Err(e) => {
+                                app.error = Some(e);
+                                app.detail_status = "Error fetching status".to_string();
+                            }
+                        }
                         refresh_detail_content(app, false).await;
                     }
                     last_refresh = Instant::now();
@@ -174,10 +197,22 @@ async fn run_app<B: ratatui::backend::Backend>(
 async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
     if let Some(timer) = app.selected_timer() {
         let activates = timer.activates.clone();
-        app.detail_logs = match app.detail_content_mode {
-            DetailContentMode::Logs => fetch_timer_logs(&activates).await,
-            DetailContentMode::ServiceFile => fetch_service_file_content(&activates).await,
-        };
+        match app.detail_content_mode {
+            DetailContentMode::Logs => match fetch_timer_logs(&activates).await {
+                Ok(logs) => app.detail_logs = logs,
+                Err(e) => {
+                    app.error = Some(e);
+                    app.detail_logs = "Error fetching logs".to_string();
+                }
+            },
+            DetailContentMode::ServiceFile => match fetch_service_file_content(&activates).await {
+                Ok(content) => app.detail_logs = content,
+                Err(e) => {
+                    app.error = Some(e);
+                    app.detail_logs = "Error fetching service file".to_string();
+                }
+            },
+        }
         if reset_scroll {
             app.detail_scroll = 0;
             // Auto-scroll only makes sense for logs

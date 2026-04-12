@@ -1,5 +1,5 @@
+use chrono::{Local, TimeZone, Utc};
 use serde::Deserialize;
-use chrono::{Utc, TimeZone, Local};
 use std::collections::HashMap;
 use tokio::process::Command;
 use tokio::task::JoinSet;
@@ -27,7 +27,14 @@ pub struct TimerInfo {
 pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
     // 1. Fetch JSON list for basic info
     let output = Command::new("systemctl")
-        .args(&["--user", "list-timers", "--all", "--output", "json", "--no-pager"])
+        .args(&[
+            "--user",
+            "list-timers",
+            "--all",
+            "--output",
+            "json",
+            "--no-pager",
+        ])
         .output()
         .await
         .map_err(|e| format!("Failed to execute systemctl: {}", e))?;
@@ -50,38 +57,45 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
     }
 
     while let Some(result) = schedule_tasks.join_next().await {
-        let (unit, schedule) = result.map_err(|e| format!("Failed to join schedule task: {}", e))?;
+        let (unit, schedule) =
+            result.map_err(|e| format!("Failed to join schedule task: {}", e))?;
         schedules.insert(unit, schedule);
     }
 
     // 2. Assemble final info
     let now = Utc::now().timestamp_micros() as u64;
 
-    let timers = raw_timers.into_iter().map(|raw| {
-        let next_abs = format_time_abs(raw.next);
-        let last_abs = format_time_abs(raw.last);
-        let next_rel = format_time_rel(raw.next, now, true);
-        let last_rel = format_time_rel(raw.last, now, false);
+    let timers = raw_timers
+        .into_iter()
+        .map(|raw| {
+            let next_abs = format_time_abs(raw.next);
+            let last_abs = format_time_abs(raw.last);
+            let next_rel = format_time_rel(raw.next, now, true);
+            let last_rel = format_time_rel(raw.last, now, false);
 
-        let schedule = schedules.get(&raw.unit).cloned().unwrap_or_else(|| "n/a".to_string());
+            let schedule = schedules
+                .get(&raw.unit)
+                .cloned()
+                .unwrap_or_else(|| "n/a".to_string());
 
-        let status = if let Some(n) = raw.next {
-            if n > now { "Active" } else { "Waiting" }
-        } else {
-            "Inactive"
-        };
+            let status = if let Some(n) = raw.next {
+                if n > now { "Active" } else { "Waiting" }
+            } else {
+                "Inactive"
+            };
 
-        TimerInfo {
-            unit: raw.unit,
-            activates: raw.activates,
-            next_abs,
-            last_abs,
-            next_rel,
-            last_rel,
-            status: status.to_string(),
-            schedule,
-        }
-    }).collect();
+            TimerInfo {
+                unit: raw.unit,
+                activates: raw.activates,
+                next_abs,
+                last_abs,
+                next_rel,
+                last_rel,
+                status: status.to_string(),
+                schedule,
+            }
+        })
+        .collect();
 
     Ok(timers)
 }
@@ -92,7 +106,10 @@ fn format_time_abs(us: Option<u64>) -> String {
         Some(t) => {
             let dt = Utc.timestamp_opt((t / 1_000_000) as i64, ((t % 1_000_000) * 1000) as u32);
             match dt {
-                chrono::LocalResult::Single(d) => d.with_timezone(&Local).format("%Y-%m-%d %H:%M:%S").to_string(),
+                chrono::LocalResult::Single(d) => d
+                    .with_timezone(&Local)
+                    .format("%Y-%m-%d %H:%M:%S")
+                    .to_string(),
                 _ => "invalid".to_string(),
             }
         }
@@ -110,7 +127,11 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
             };
 
             if diff == 0 {
-                return if is_next { "just now".to_string() } else { "just now".to_string() };
+                return if is_next {
+                    "just now".to_string()
+                } else {
+                    "just now".to_string()
+                };
             }
 
             let secs = diff / 1_000_000;
@@ -122,10 +143,18 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
             let prefix = if is_next { "in " } else { "" };
 
             if days > 0 {
-                let extra = if is_next && hours % 24 > 0 { format!(" {}h", hours % 24) } else { "".to_string() };
+                let extra = if is_next && hours % 24 > 0 {
+                    format!(" {}h", hours % 24)
+                } else {
+                    "".to_string()
+                };
                 format!("{}{}d{}{}", prefix, days, extra, suffix)
             } else if hours > 0 {
-                let extra = if is_next && mins % 60 > 0 { format!(" {}m", mins % 60) } else { "".to_string() };
+                let extra = if is_next && mins % 60 > 0 {
+                    format!(" {}m", mins % 60)
+                } else {
+                    "".to_string()
+                };
                 format!("{}{}h{}{}", prefix, hours, extra, suffix)
             } else if mins > 0 {
                 format!("{}{}m{}", prefix, mins, suffix)
@@ -247,63 +276,65 @@ fn dedupe_schedule_values(values: Vec<String>) -> String {
     }
 }
 
-pub async fn fetch_timer_status(timer_unit: &str) -> String {
+pub async fn fetch_timer_status(timer_unit: &str) -> Result<String, String> {
     let output = Command::new("systemctl")
         .args(&["--user", "show", timer_unit, "--no-pager"])
         .output()
         .await;
 
     match output {
-        Ok(o) => String::from_utf8_lossy(&o.stdout).to_string(),
-        Err(e) => format!("Error: {}", e),
+        Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).to_string()),
+        Err(e) => Err(format!("Error: {}", e)),
     }
 }
 
-pub async fn fetch_timer_logs(service_unit: &str) -> String {
+pub async fn fetch_timer_logs(service_unit: &str) -> Result<String, String> {
     let output = Command::new("journalctl")
         .args(&["--user", "-u", service_unit, "-n", "50", "--no-pager"])
         .output()
         .await;
 
     match output {
-        Ok(o) => String::from_utf8_lossy(&o.stdout).to_string(),
-        Err(e) => format!("Error: {}", e),
+        Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).to_string()),
+        Err(e) => Err(format!("Error: {}", e)),
     }
 }
 
-pub async fn fetch_service_file_content(service_unit: &str) -> String {
+pub async fn fetch_service_file_content(service_unit: &str) -> Result<String, String> {
     match Command::new("systemctl")
         .args(&["--user", "cat", service_unit, "--no-pager"])
         .output()
         .await
     {
-        Ok(output) => normalize_service_file_output(
-            &output.stdout,
-            &output.stderr,
-            output.status.success(),
-        ),
-        Err(error) => format!("Service file unavailable: {}", error),
+        Ok(output) => {
+            normalize_service_file_output(&output.stdout, &output.stderr, output.status.success())
+        }
+        Err(error) => Err(format!("Service file unavailable: {}", error)),
     }
 }
 
-fn normalize_service_file_output(stdout: &[u8], stderr: &[u8], success: bool) -> String {
-    let stdout = String::from_utf8_lossy(stdout).to_string();
-    if success && !stdout.trim().is_empty() {
-        return stdout;
+fn normalize_service_file_output(
+    stdout: &[u8],
+    stderr: &[u8],
+    success: bool,
+) -> Result<String, String> {
+    let stdout_str = String::from_utf8_lossy(stdout).to_string();
+    if success && !stdout_str.trim().is_empty() {
+        return Ok(stdout_str);
     }
 
     let detail = if success {
         "empty output".to_string()
     } else {
-        let stderr = String::from_utf8_lossy(stderr).trim().to_string();
-        if stderr.is_empty() {
+        let stderr_str = String::from_utf8_lossy(stderr).trim().to_string();
+        if stderr_str.is_empty() {
             "empty output".to_string()
         } else {
-            stderr
+            stderr_str
         }
     };
 
-    format!("Service file unavailable: {}", detail)
+    Err(format!("Service file unavailable: {}", detail))
 }
 
 pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
@@ -327,26 +358,30 @@ mod tests {
     #[test]
     fn service_file_output_preserves_successful_stdout() {
         let output = normalize_service_file_output(b"[Unit]\nDescription=Example\n", b"", true);
-        assert_eq!(output, "[Unit]\nDescription=Example\n");
+        assert_eq!(output.unwrap(), "[Unit]\nDescription=Example\n");
     }
 
     #[test]
     fn service_file_output_reports_command_stderr() {
         let output = normalize_service_file_output(b"", b"No files found\n", false);
-        assert_eq!(output, "Service file unavailable: No files found");
+        assert_eq!(
+            output.unwrap_err(),
+            "Service file unavailable: No files found"
+        );
     }
 
     #[test]
     fn service_file_output_reports_empty_success_output() {
         let output = normalize_service_file_output(b"", b"", true);
-        assert_eq!(output, "Service file unavailable: empty output");
+        assert_eq!(
+            output.unwrap_err(),
+            "Service file unavailable: empty output"
+        );
     }
 
     #[test]
     fn timer_schedule_extracts_calendar_and_monotonic_values() {
-        let output = extract_timer_schedule(
-            "OnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n",
-        );
+        let output = extract_timer_schedule("OnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
 
         assert_eq!(output, "*-*-* 04:00:00, OnUnitActiveSec=1d");
     }
