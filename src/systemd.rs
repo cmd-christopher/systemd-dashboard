@@ -141,7 +141,6 @@ async fn fetch_timer_schedule(timer_unit: &str) -> String {
         .args(&[
             "--user",
             "show",
-            timer_unit,
             "-p",
             "OnCalendar",
             "-p",
@@ -159,6 +158,8 @@ async fn fetch_timer_schedule(timer_unit: &str) -> String {
             "-p",
             "TimersMonotonic",
             "--no-pager",
+            "--",
+            timer_unit,
         ])
         .output()
         .await;
@@ -249,7 +250,7 @@ fn dedupe_schedule_values(values: Vec<String>) -> String {
 
 pub async fn fetch_timer_status(timer_unit: &str) -> String {
     let output = Command::new("systemctl")
-        .args(&["--user", "show", timer_unit, "--no-pager"])
+        .args(&["--user", "show", "--no-pager", "--", timer_unit])
         .output()
         .await;
 
@@ -273,7 +274,7 @@ pub async fn fetch_timer_logs(service_unit: &str) -> String {
 
 pub async fn fetch_service_file_content(service_unit: &str) -> String {
     match Command::new("systemctl")
-        .args(&["--user", "cat", service_unit, "--no-pager"])
+        .args(&["--user", "cat", "--no-pager", "--", service_unit])
         .output()
         .await
     {
@@ -309,7 +310,7 @@ fn normalize_service_file_output(stdout: &[u8], stderr: &[u8], success: bool) ->
 pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
     let action = if start { "start" } else { "stop" };
     let output = Command::new("systemctl")
-        .args(&["--user", action, timer_unit])
+        .args(&["--user", action, "--", timer_unit])
         .output()
         .await
         .map_err(|e| format!("Failed to toggle timer: {}", e))?;
