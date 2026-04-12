@@ -115,7 +115,7 @@ impl App {
         if self.detail_scroll < self.detail_max_scroll {
             self.detail_scroll += 1;
         }
-        
+
         if self.detail_scroll >= self.detail_max_scroll {
             self.auto_scroll = true;
         }

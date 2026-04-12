@@ -1,11 +1,11 @@
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    text::{Line, Span},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState, Wrap},
-    Frame,
-};
 use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
+use ratatui::{
+    Frame,
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState, Wrap},
+};
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
 
@@ -82,7 +82,13 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     let normal_style = Style::default().bg(Color::Blue);
     let header_cells = ["Unit", "Schedule", "Last Run", "Next Run", "Status"]
         .iter()
-        .map(|h| Cell::from(*h).style(Style::default().fg(Color::Black).add_modifier(Modifier::BOLD)));
+        .map(|h| {
+            Cell::from(*h).style(
+                Style::default()
+                    .fg(Color::Black)
+                    .add_modifier(Modifier::BOLD),
+            )
+        });
     let header = Row::new(header_cells)
         .style(normal_style)
         .height(1)
@@ -97,7 +103,11 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         };
 
         let cells = vec![
-            Cell::from(item.unit.as_str()).style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
+            Cell::from(item.unit.as_str()).style(
+                Style::default()
+                    .fg(Color::White)
+                    .add_modifier(Modifier::BOLD),
+            ),
             Cell::from(item.schedule.as_str()).style(Style::default().fg(Color::Yellow)),
             Cell::from(item.last_rel.as_str()).style(Style::default().fg(Color::DarkGray)),
             Cell::from(item.next_rel.as_str()).style(Style::default().fg(Color::Cyan)),
@@ -106,19 +116,22 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Row::new(cells).height(1)
     });
 
-    let t = Table::new(rows, [
-        Constraint::Percentage(25), // Unit
-        Constraint::Percentage(25), // Schedule
-        Constraint::Percentage(15), // Last Run
-        Constraint::Percentage(15), // Next Run
-        Constraint::Percentage(20), // Status
-    ])
+    let t = Table::new(
+        rows,
+        [
+            Constraint::Percentage(25), // Unit
+            Constraint::Percentage(25), // Schedule
+            Constraint::Percentage(15), // Last Run
+            Constraint::Percentage(15), // Next Run
+            Constraint::Percentage(20), // Status
+        ],
+    )
     .header(header)
     .block(
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Magenta))
-            .title(" Systemd Timers ")
+            .title(" Systemd Timers "),
     )
     .highlight_style(selected_style)
     .highlight_symbol(">> ");
