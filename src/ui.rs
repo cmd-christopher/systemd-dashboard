@@ -64,7 +64,7 @@ fn count_visual_lines(text: &str, max_width: u16) -> usize {
 pub fn draw_ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(0)])
+        .constraints([Constraint::Min(0), Constraint::Length(1)])
         .split(f.size());
 
     match app.mode {
@@ -72,9 +72,39 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
         ViewMode::Detail => draw_detail(f, app, chunks[0]),
     }
 
+    draw_footer(f, app, chunks[1]);
+
     if let Some(err) = &app.error {
         draw_error(f, err, chunks[0]);
     }
+}
+
+fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
+    let keys = match app.mode {
+        ViewMode::List => vec![
+            Span::styled("↑/↓, j/k", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Navigate   "),
+            Span::styled("Enter", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Details   "),
+            Span::styled("Space", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Toggle   "),
+            Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Quit"),
+        ],
+        ViewMode::Detail => vec![
+            Span::styled("Esc/Bksp", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Back   "),
+            Span::styled("Tab", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Focus   "),
+            Span::styled("Arrows/j/k", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Navigate   "),
+            Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(" Quit"),
+        ],
+    };
+
+    let footer = Paragraph::new(Line::from(keys)).style(Style::default().fg(Color::Gray));
+    f.render_widget(footer, area);
 }
 
 fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
