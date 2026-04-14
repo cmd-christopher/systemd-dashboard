@@ -27,7 +27,7 @@ pub struct TimerInfo {
 pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
     // 1. Fetch JSON list for basic info
     let output = Command::new("systemctl")
-        .args(&[
+        .args([
             "--user",
             "list-timers",
             "--all",
@@ -121,17 +121,13 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
         Some(0) | None => "n/a".to_string(),
         Some(t) => {
             let diff = if is_next {
-                if t > now { t - now } else { 0 }
+                t.saturating_sub(now)
             } else {
-                if now > t { now - t } else { 0 }
+                now.saturating_sub(t)
             };
 
             if diff == 0 {
-                return if is_next {
-                    "just now".to_string()
-                } else {
-                    "just now".to_string()
-                };
+                return "just now".to_string();
             }
 
             let secs = diff / 1_000_000;
@@ -167,7 +163,7 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
 
 async fn fetch_timer_schedule(timer_unit: &str) -> String {
     let output = Command::new("systemctl")
-        .args(&[
+        .args([
             "--user",
             "show",
             timer_unit,
@@ -280,7 +276,7 @@ fn dedupe_schedule_values(values: Vec<String>) -> String {
 
 pub async fn fetch_timer_status(timer_unit: &str) -> Result<String, String> {
     let output = Command::new("systemctl")
-        .args(&["--user", "show", timer_unit, "--no-pager"])
+        .args(["--user", "show", timer_unit, "--no-pager"])
         .output()
         .await;
 
@@ -292,7 +288,7 @@ pub async fn fetch_timer_status(timer_unit: &str) -> Result<String, String> {
 
 pub async fn fetch_timer_logs(service_unit: &str) -> Result<String, String> {
     let output = Command::new("journalctl")
-        .args(&["--user", "-u", service_unit, "-n", "50", "--no-pager"])
+        .args(["--user", "-u", service_unit, "-n", "50", "--no-pager"])
         .output()
         .await;
 
@@ -304,7 +300,7 @@ pub async fn fetch_timer_logs(service_unit: &str) -> Result<String, String> {
 
 pub async fn fetch_service_file_content(service_unit: &str) -> Result<String, String> {
     match Command::new("systemctl")
-        .args(&["--user", "cat", service_unit, "--no-pager"])
+        .args(["--user", "cat", service_unit, "--no-pager"])
         .output()
         .await
     {
@@ -342,7 +338,7 @@ fn normalize_service_file_output(
 pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
     let action = if start { "start" } else { "stop" };
     let output = Command::new("systemctl")
-        .args(&["--user", action, timer_unit])
+        .args(["--user", action, timer_unit])
         .output()
         .await
         .map_err(|e| format!("Failed to toggle timer: {}", e))?;

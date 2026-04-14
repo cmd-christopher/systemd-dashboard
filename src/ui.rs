@@ -64,13 +64,15 @@ fn count_visual_lines(text: &str, max_width: u16) -> usize {
 pub fn draw_ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(0)])
+        .constraints([Constraint::Min(0), Constraint::Length(1)])
         .split(f.size());
 
     match app.mode {
         ViewMode::List => draw_list(f, app, chunks[0]),
         ViewMode::Detail => draw_detail(f, app, chunks[0]),
     }
+
+    draw_footer(f, app, chunks[1]);
 
     if let Some(err) = &app.error {
         draw_error(f, err, chunks[0]);
@@ -247,6 +249,29 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .scroll((app.detail_scroll as u16, 0));
 
     f.render_widget(logs_list, chunks[1]);
+}
+
+fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
+    let help_text = match app.mode {
+        ViewMode::List => {
+            " [↑/↓, j/k] Navigate | [Enter] Select | [Space] Toggle Timer | [q] Quit "
+        }
+        ViewMode::Detail => match app.detail_focus {
+            DetailPaneFocus::Top => {
+                " [Tab] Focus Bottom | [←/→] Switch Mode | [Esc] Back | [q] Quit "
+            }
+            DetailPaneFocus::Bottom => {
+                " [Tab] Focus Top | [↑/↓, j/k] Scroll | [Esc] Back | [q] Quit "
+            }
+        },
+    };
+
+    let paragraph = Paragraph::new(Span::styled(
+        help_text,
+        Style::default().fg(Color::DarkGray),
+    ))
+    .alignment(ratatui::layout::Alignment::Center);
+    f.render_widget(paragraph, area);
 }
 
 fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
