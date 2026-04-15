@@ -1,0 +1,3 @@
+## 2025-04-15 - Contextual Keybinding Footer
+**Learning:** Adding a contextual keybinding footer based on the application's view mode (`ViewMode::List` vs. `ViewMode::Detail`) drastically improves the discoverability of terminal UI (TUI) interactions without cluttering the screen or requiring the user to read documentation. Terminal applications heavily rely on keyboard shortcuts; making them explicit and contextual reduces the cognitive load.
+**Action:** When designing or modifying terminal applications (or complex desktop/web app views), always consider adding unobtrusive, contextual hints for primary keybindings to improve keyboard accessibility and general UX.
