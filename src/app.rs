@@ -213,4 +213,90 @@ mod tests {
         app.scroll_detail_down(); // scroll=5
         assert!(app.auto_scroll);
     }
+
+    #[test]
+    fn previous_wraps_index_and_handles_empty_list() {
+        let mut app = App::new();
+
+        // Empty list -> does nothing
+        app.previous();
+        assert_eq!(app.selected_index, 0);
+
+        // Add dummy timers
+        app.timers.push(crate::systemd::TimerInfo {
+            unit: "t1".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: String::new(),
+            schedule: String::new(),
+        });
+        app.timers.push(crate::systemd::TimerInfo {
+            unit: "t2".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: String::new(),
+            schedule: String::new(),
+        });
+        app.timers.push(crate::systemd::TimerInfo {
+            unit: "t3".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: String::new(),
+            schedule: String::new(),
+        });
+
+        app.selected_index = 0;
+        app.previous();
+        assert_eq!(app.selected_index, 2); // Wraps to end
+
+        app.previous();
+        assert_eq!(app.selected_index, 1); // Decrements normally
+    }
+
+    #[test]
+    fn next_wraps_index_and_handles_empty_list() {
+        let mut app = App::new();
+
+        // Empty list -> does nothing
+        app.next();
+        assert_eq!(app.selected_index, 0);
+
+        // Add dummy timers
+        app.timers.push(crate::systemd::TimerInfo {
+            unit: "t1".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: String::new(),
+            schedule: String::new(),
+        });
+        app.timers.push(crate::systemd::TimerInfo {
+            unit: "t2".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: String::new(),
+            schedule: String::new(),
+        });
+
+        app.selected_index = 0;
+        app.next();
+        assert_eq!(app.selected_index, 1); // Increments normally
+
+        app.next();
+        assert_eq!(app.selected_index, 0); // Wraps to beginning
+    }
 }
