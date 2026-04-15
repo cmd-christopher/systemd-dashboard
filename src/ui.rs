@@ -64,13 +64,15 @@ fn count_visual_lines(text: &str, max_width: u16) -> usize {
 pub fn draw_ui(f: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(0)])
+        .constraints([Constraint::Min(0), Constraint::Length(1)])
         .split(f.size());
 
     match app.mode {
         ViewMode::List => draw_list(f, app, chunks[0]),
         ViewMode::Detail => draw_detail(f, app, chunks[0]),
     }
+
+    draw_footer(f, app, chunks[1]);
 
     if let Some(err) = &app.error {
         draw_error(f, err, chunks[0]);
@@ -256,4 +258,21 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
         .title(" Error ");
     let para = Paragraph::new(msg).block(block);
     f.render_widget(para, area);
+}
+
+fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
+    let keybindings = match app.mode {
+        ViewMode::List => {
+            "q: Quit | j/k or \u{2191}/\u{2193}: Navigate | Enter: Detail | Space: Toggle"
+        }
+        ViewMode::Detail => {
+            "q: Quit | Esc/Backspace: Back | Tab: Switch Pane | Arrows or j/k: Navigate Pane"
+        }
+    };
+
+    let footer = Paragraph::new(keybindings)
+        .style(Style::default().fg(Color::DarkGray).bg(Color::Black))
+        .alignment(ratatui::layout::Alignment::Center);
+
+    f.render_widget(footer, area);
 }
