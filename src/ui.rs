@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState, Wrap},
+    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, TableState, Wrap},
 };
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
@@ -252,12 +252,33 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
+    let popup_area = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(40),
+            Constraint::Percentage(20),
+            Constraint::Percentage(40),
+        ])
+        .split(area)[1];
+
+    let popup_area = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(20),
+            Constraint::Percentage(60),
+            Constraint::Percentage(20),
+        ])
+        .split(popup_area)[1];
+
     let block = Block::default()
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red))
-        .title(" Error ");
-    let para = Paragraph::new(msg).block(block);
-    f.render_widget(para, area);
+        .title(" Error [Press any key to dismiss] ");
+
+    let para = Paragraph::new(msg).block(block).wrap(Wrap { trim: true });
+
+    f.render_widget(Clear, popup_area);
+    f.render_widget(para, popup_area);
 }
 
 fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
