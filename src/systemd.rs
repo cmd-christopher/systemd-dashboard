@@ -121,17 +121,13 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
         Some(0) | None => "n/a".to_string(),
         Some(t) => {
             let diff = if is_next {
-                if t > now { t - now } else { 0 }
+                t.saturating_sub(now)
             } else {
-                if now > t { now - t } else { 0 }
+                now.saturating_sub(t)
             };
 
             if diff == 0 {
-                return if is_next {
-                    "just now".to_string()
-                } else {
-                    "just now".to_string()
-                };
+                return "just now".to_string();
             }
 
             let secs = diff / 1_000_000;
