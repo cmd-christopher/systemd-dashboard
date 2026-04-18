@@ -356,7 +356,9 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{extract_timer_schedule, format_time_abs, format_time_rel, normalize_service_file_output};
+    use super::{
+        extract_timer_schedule, format_time_abs, format_time_rel, normalize_service_file_output,
+    };
 
     #[test]
     fn service_file_output_preserves_successful_stdout() {
@@ -435,33 +437,75 @@ mod tests {
         assert_eq!(format_time_rel(Some(now), now, false), "just now");
 
         // Direction logic: when time goes backwards to expectations
-        assert_eq!(format_time_rel(Some(now - 1_000_000), now, true), "just now");
-        assert_eq!(format_time_rel(Some(now + 1_000_000), now, false), "just now");
+        assert_eq!(
+            format_time_rel(Some(now - 1_000_000), now, true),
+            "just now"
+        );
+        assert_eq!(
+            format_time_rel(Some(now + 1_000_000), now, false),
+            "just now"
+        );
 
         // Seconds
-        assert_eq!(format_time_rel(Some(now + 5 * 1_000_000), now, true), "in 5s");
-        assert_eq!(format_time_rel(Some(now - 5 * 1_000_000), now, false), "5s ago");
+        assert_eq!(
+            format_time_rel(Some(now + 5 * 1_000_000), now, true),
+            "in 5s"
+        );
+        assert_eq!(
+            format_time_rel(Some(now - 5 * 1_000_000), now, false),
+            "5s ago"
+        );
 
         // Minutes
-        assert_eq!(format_time_rel(Some(now + 5 * 60 * 1_000_000), now, true), "in 5m");
-        assert_eq!(format_time_rel(Some(now - 5 * 60 * 1_000_000), now, false), "5m ago");
+        assert_eq!(
+            format_time_rel(Some(now + 5 * 60 * 1_000_000), now, true),
+            "in 5m"
+        );
+        assert_eq!(
+            format_time_rel(Some(now - 5 * 60 * 1_000_000), now, false),
+            "5m ago"
+        );
 
         // Hours
-        assert_eq!(format_time_rel(Some(now + 5 * 3600 * 1_000_000), now, true), "in 5h");
-        assert_eq!(format_time_rel(Some(now - 5 * 3600 * 1_000_000), now, false), "5h ago");
+        assert_eq!(
+            format_time_rel(Some(now + 5 * 3600 * 1_000_000), now, true),
+            "in 5h"
+        );
+        assert_eq!(
+            format_time_rel(Some(now - 5 * 3600 * 1_000_000), now, false),
+            "5h ago"
+        );
 
         // Hours with minutes extra
-        assert_eq!(format_time_rel(Some(now + (2 * 3600 + 30 * 60) * 1_000_000), now, true), "in 2h 30m");
+        assert_eq!(
+            format_time_rel(Some(now + (2 * 3600 + 30 * 60) * 1_000_000), now, true),
+            "in 2h 30m"
+        );
         // Extra logic is only for is_next=true
-        assert_eq!(format_time_rel(Some(now - (2 * 3600 + 30 * 60) * 1_000_000), now, false), "2h ago");
+        assert_eq!(
+            format_time_rel(Some(now - (2 * 3600 + 30 * 60) * 1_000_000), now, false),
+            "2h ago"
+        );
 
         // Days
-        assert_eq!(format_time_rel(Some(now + 5 * 86400 * 1_000_000), now, true), "in 5d");
-        assert_eq!(format_time_rel(Some(now - 5 * 86400 * 1_000_000), now, false), "5d ago");
+        assert_eq!(
+            format_time_rel(Some(now + 5 * 86400 * 1_000_000), now, true),
+            "in 5d"
+        );
+        assert_eq!(
+            format_time_rel(Some(now - 5 * 86400 * 1_000_000), now, false),
+            "5d ago"
+        );
 
         // Days with hours extra
-        assert_eq!(format_time_rel(Some(now + (1 * 86400 + 5 * 3600) * 1_000_000), now, true), "in 1d 5h");
+        assert_eq!(
+            format_time_rel(Some(now + (1 * 86400 + 5 * 3600) * 1_000_000), now, true),
+            "in 1d 5h"
+        );
         // Extra logic is only for is_next=true
-        assert_eq!(format_time_rel(Some(now - (1 * 86400 + 5 * 3600) * 1_000_000), now, false), "1d ago");
+        assert_eq!(
+            format_time_rel(Some(now - (1 * 86400 + 5 * 3600) * 1_000_000), now, false),
+            "1d ago"
+        );
     }
 }
