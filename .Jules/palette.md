@@ -1,3 +1,6 @@
 ## 2025-04-17 - Text bleed-through in Ratatui Overlays
 **Learning:** In Ratatui TUI applications, popup overlays (like error dialogues) drawn over existing text will allow the background text to bleed through unless the target area is explicitly cleared first. Long messages also require explicit `.wrap(Wrap { trim: true })` configurations to ensure they remain readable inside constrained block boundaries.
 **Action:** When rendering popups or overlay components in Ratatui, always call `f.render_widget(Clear, area);` before rendering the actual overlay widget, and ensure potentially long text has proper wrap configurations. Additionally, error dialogue titles should clearly instruct the user on how to dismiss them (e.g., "Press any key to dismiss").
+## 2025-02-12 - Error View Modal Redesign
+**Learning:** In terminal UIs with a split-pane layout, rendering error messages as a full-size override block obscures the background content, making the error feel disjointed from the action being taken. Using a centered layout to create a "modal" over the existing UI provides better context for the user.
+**Action:** Use ratatui's Layout constraints with `Clear` widget to build centered overlay popups instead of full-screen error components.

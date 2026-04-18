@@ -251,15 +251,35 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(logs_list, chunks[1]);
 }
 
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}
+
 fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
+    let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red))
         .title(" Error (Press any key to dismiss) ");
     let para = Paragraph::new(msg).block(block).wrap(Wrap { trim: true });
 
-    f.render_widget(Clear, area);
-    f.render_widget(para, area);
+    f.render_widget(Clear, popup_area);
+    f.render_widget(para, popup_area);
 }
 
 fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
