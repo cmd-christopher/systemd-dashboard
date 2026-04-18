@@ -463,5 +463,23 @@ mod tests {
         assert_eq!(format_time_rel(Some(now + (1 * 86400 + 5 * 3600) * 1_000_000), now, true), "in 1d 5h");
         // Extra logic is only for is_next=true
         assert_eq!(format_time_rel(Some(now - (1 * 86400 + 5 * 3600) * 1_000_000), now, false), "1d ago");
+
+        // Boundary conditions - under and exactly at thresholds
+        assert_eq!(format_time_rel(Some(now + 59 * 1_000_000), now, true), "in 59s");
+        assert_eq!(format_time_rel(Some(now + 60 * 1_000_000), now, true), "in 1m");
+
+        assert_eq!(format_time_rel(Some(now + 3599 * 1_000_000), now, true), "in 59m");
+        assert_eq!(format_time_rel(Some(now + 3600 * 1_000_000), now, true), "in 1h");
+
+        assert_eq!(format_time_rel(Some(now + 86399 * 1_000_000), now, true), "in 23h 59m");
+        assert_eq!(format_time_rel(Some(now + 86400 * 1_000_000), now, true), "in 1d");
+
+        // Same boundary conditions for past times
+        assert_eq!(format_time_rel(Some(now - 59 * 1_000_000), now, false), "59s ago");
+        assert_eq!(format_time_rel(Some(now - 60 * 1_000_000), now, false), "1m ago");
+        assert_eq!(format_time_rel(Some(now - 3599 * 1_000_000), now, false), "59m ago");
+        assert_eq!(format_time_rel(Some(now - 3600 * 1_000_000), now, false), "1h ago");
+        assert_eq!(format_time_rel(Some(now - 86399 * 1_000_000), now, false), "23h ago");
+        assert_eq!(format_time_rel(Some(now - 86400 * 1_000_000), now, false), "1d ago");
     }
 }
