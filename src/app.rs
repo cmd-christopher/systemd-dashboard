@@ -181,6 +181,14 @@ mod tests {
     }
 
     #[test]
+    fn previous_with_empty_timers_and_nonzero_index_does_not_modify_index() {
+        let mut app = App::new();
+        app.selected_index = 5;
+        app.previous();
+        assert_eq!(app.selected_index, 5);
+    }
+
+    #[test]
     fn previous_decrements_index_and_wraps() {
         let mut app = App::new();
         app.timers.push(create_dummy_timer());
