@@ -323,7 +323,10 @@ mod tests {
         // "supercalifragilisticexpialidocious" len=34
         // max_width=10 -> full_lines=3, remainder=4.
         // loop ends, line_width=4 -> +1 -> 4
-        assert_eq!(count_visual_lines("supercalifragilisticexpialidocious", 10), 4);
+        assert_eq!(
+            count_visual_lines("supercalifragilisticexpialidocious", 10),
+            4
+        );
 
         // "12345678901234567890" len=20
         // max_width=10 -> full_lines=2, remainder=0.

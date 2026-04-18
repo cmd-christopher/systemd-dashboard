@@ -77,84 +77,16 @@ async fn run_app<B: ratatui::backend::Backend>(
                     app.error = None;
                 }
                 match app.mode {
-                    ViewMode::List => match key.code {
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Down | KeyCode::Char('j') => app.next(),
-                        KeyCode::Up | KeyCode::Char('k') => app.previous(),
-                        KeyCode::Enter => {
-                            if let Some(timer) = app.selected_timer() {
-                                let unit = timer.unit.clone();
-                                let activates = timer.activates.clone();
-                                match fetch_timer_status(&unit).await {
-                                    Ok(status) => app.detail_status = status,
-                                    Err(e) => {
-                                        app.error = Some(e);
-                                        app.detail_status = "Error fetching status".to_string();
-                                    }
-                                }
-                                match fetch_timer_logs(&activates).await {
-                                    Ok(logs) => app.detail_logs = logs,
-                                    Err(e) => {
-                                        app.error = Some(e);
-                                        app.detail_logs = "Error fetching logs".to_string();
-                                    }
-                                }
-                                app.enter_detail();
-                            }
+                    ViewMode::List => {
+                        if handle_list_input(app, key.code).await {
+                            return Ok(());
                         }
-                        KeyCode::Char(' ') => {
-                            if let Some(timer) = app.selected_timer() {
-                                let unit = timer.unit.clone();
-                                let is_active =
-                                    timer.status == "Active" || timer.status == "Waiting";
-
-                                match crate::systemd::toggle_timer(&unit, !is_active).await {
-                                    Ok(_) => {
-                                        app.error = None;
-                                        match fetch_timers().await {
-                                            Ok(timers) => app.timers = timers,
-                                            Err(e) => app.error = Some(e),
-                                        }
-                                    }
-                                    Err(e) => app.error = Some(e),
-                                }
-                            }
+                    }
+                    ViewMode::Detail => {
+                        if handle_detail_input(app, key.code).await {
+                            return Ok(());
                         }
-                        _ => {}
-                    },
-                    ViewMode::Detail => match key.code {
-                        KeyCode::Esc | KeyCode::Backspace => app.exit_detail(),
-                        KeyCode::Tab => app.toggle_detail_focus(),
-                        KeyCode::Left | KeyCode::Up
-                            if matches!(app.detail_focus, DetailPaneFocus::Top) =>
-                        {
-                            app.select_previous_detail_content();
-                            refresh_detail_content(app, true).await;
-                        }
-                        KeyCode::Right | KeyCode::Down
-                            if matches!(app.detail_focus, DetailPaneFocus::Top) =>
-                        {
-                            app.select_next_detail_content();
-                            refresh_detail_content(app, true).await;
-                        }
-                        KeyCode::Left | KeyCode::Up
-                            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
-                        {
-                            app.scroll_detail_up();
-                        }
-                        KeyCode::Right | KeyCode::Down | KeyCode::Char('j')
-                            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
-                        {
-                            app.scroll_detail_down();
-                        }
-                        KeyCode::Char('k')
-                            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
-                        {
-                            app.scroll_detail_up();
-                        }
-                        KeyCode::Char('q') => return Ok(()),
-                        _ => {}
-                    },
+                    }
                 }
             }
         }
@@ -191,6 +123,83 @@ async fn run_app<B: ratatui::backend::Backend>(
             last_tick = Instant::now();
         }
     }
+}
+
+async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
+    match key_code {
+        KeyCode::Char('q') => return true,
+        KeyCode::Down | KeyCode::Char('j') => app.next(),
+        KeyCode::Up | KeyCode::Char('k') => app.previous(),
+        KeyCode::Enter => {
+            if let Some(timer) = app.selected_timer() {
+                let unit = timer.unit.clone();
+                let activates = timer.activates.clone();
+                match fetch_timer_status(&unit).await {
+                    Ok(status) => app.detail_status = status,
+                    Err(e) => {
+                        app.error = Some(e);
+                        app.detail_status = "Error fetching status".to_string();
+                    }
+                }
+                match fetch_timer_logs(&activates).await {
+                    Ok(logs) => app.detail_logs = logs,
+                    Err(e) => {
+                        app.error = Some(e);
+                        app.detail_logs = "Error fetching logs".to_string();
+                    }
+                }
+                app.enter_detail();
+            }
+        }
+        KeyCode::Char(' ') => {
+            if let Some(timer) = app.selected_timer() {
+                let unit = timer.unit.clone();
+                let is_active = timer.status == "Active" || timer.status == "Waiting";
+
+                match crate::systemd::toggle_timer(&unit, !is_active).await {
+                    Ok(_) => {
+                        app.error = None;
+                        match fetch_timers().await {
+                            Ok(timers) => app.timers = timers,
+                            Err(e) => app.error = Some(e),
+                        }
+                    }
+                    Err(e) => app.error = Some(e),
+                }
+            }
+        }
+        _ => {}
+    }
+    false
+}
+
+async fn handle_detail_input(app: &mut App, key_code: KeyCode) -> bool {
+    match key_code {
+        KeyCode::Esc | KeyCode::Backspace => app.exit_detail(),
+        KeyCode::Tab => app.toggle_detail_focus(),
+        KeyCode::Left | KeyCode::Up if matches!(app.detail_focus, DetailPaneFocus::Top) => {
+            app.select_previous_detail_content();
+            refresh_detail_content(app, true).await;
+        }
+        KeyCode::Right | KeyCode::Down if matches!(app.detail_focus, DetailPaneFocus::Top) => {
+            app.select_next_detail_content();
+            refresh_detail_content(app, true).await;
+        }
+        KeyCode::Left | KeyCode::Up if matches!(app.detail_focus, DetailPaneFocus::Bottom) => {
+            app.scroll_detail_up();
+        }
+        KeyCode::Right | KeyCode::Down | KeyCode::Char('j')
+            if matches!(app.detail_focus, DetailPaneFocus::Bottom) =>
+        {
+            app.scroll_detail_down();
+        }
+        KeyCode::Char('k') if matches!(app.detail_focus, DetailPaneFocus::Bottom) => {
+            app.scroll_detail_up();
+        }
+        KeyCode::Char('q') => return true,
+        _ => {}
+    }
+    false
 }
 
 async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
