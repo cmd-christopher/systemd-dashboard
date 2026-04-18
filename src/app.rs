@@ -132,6 +132,72 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::{App, DetailContentMode, DetailPaneFocus};
+    use crate::systemd::TimerInfo;
+
+    fn create_dummy_timer() -> TimerInfo {
+        TimerInfo {
+            unit: String::new(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: String::new(),
+            schedule: String::new(),
+        }
+    }
+
+    #[test]
+    fn next_with_empty_timers_does_nothing() {
+        let mut app = App::new();
+        app.next();
+        assert_eq!(app.selected_index, 0);
+    }
+
+    #[test]
+    fn next_increments_index_and_wraps() {
+        let mut app = App::new();
+        app.timers.push(create_dummy_timer());
+        app.timers.push(create_dummy_timer());
+        app.timers.push(create_dummy_timer());
+
+        assert_eq!(app.selected_index, 0);
+
+        app.next();
+        assert_eq!(app.selected_index, 1);
+
+        app.next();
+        assert_eq!(app.selected_index, 2);
+
+        app.next();
+        assert_eq!(app.selected_index, 0);
+    }
+
+    #[test]
+    fn previous_with_empty_timers_does_nothing() {
+        let mut app = App::new();
+        app.previous();
+        assert_eq!(app.selected_index, 0);
+    }
+
+    #[test]
+    fn previous_decrements_index_and_wraps() {
+        let mut app = App::new();
+        app.timers.push(create_dummy_timer());
+        app.timers.push(create_dummy_timer());
+        app.timers.push(create_dummy_timer());
+
+        assert_eq!(app.selected_index, 0);
+
+        app.previous();
+        assert_eq!(app.selected_index, 2);
+
+        app.previous();
+        assert_eq!(app.selected_index, 1);
+
+        app.previous();
+        assert_eq!(app.selected_index, 0);
+    }
 
     #[test]
     fn detail_view_defaults_to_logs_mode() {
