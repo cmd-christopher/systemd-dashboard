@@ -278,3 +278,66 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
 
     f.render_widget(footer, area);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_count_visual_lines_zero_width() {
+        assert_eq!(count_visual_lines("hello world", 0), 0);
+    }
+
+    #[test]
+    fn test_count_visual_lines_empty_string() {
+        assert_eq!(count_visual_lines("", 10), 0);
+    }
+
+    #[test]
+    fn test_count_visual_lines_no_wrap() {
+        assert_eq!(count_visual_lines("hello", 10), 1);
+        assert_eq!(count_visual_lines("hello world", 11), 1);
+    }
+
+    #[test]
+    fn test_count_visual_lines_with_wrap() {
+        // "hello world" fits on line 1: "hello " (len 6) + "world" (len 5) = 11.
+        // If max_width is 10, "hello " (6) + "world" (5) = 11 > 10.
+        // Line 1: "hello " (6) -> total_lines=1, line_width=5 ("world")
+        // total_lines=2
+        assert_eq!(count_visual_lines("hello world", 10), 2);
+
+        // "hello world" max_width=5
+        // "hello " (len 6) > 5. word_len=6.
+        // full_lines=1, remainder=1. total_lines=1, line_width=1.
+        // "world" (len 5) = 5.
+        // line_width(1) + 5 = 6 > 5.
+        // total_lines=2, line_width=0.
+        // "world" (5) <= 5. line_width=5.
+        // end loop: total_lines=3.
+        assert_eq!(count_visual_lines("hello world", 5), 3);
+    }
+
+    #[test]
+    fn test_count_visual_lines_long_words() {
+        // "supercalifragilisticexpialidocious" len=34
+        // max_width=10 -> full_lines=3, remainder=4.
+        // loop ends, line_width=4 -> +1 -> 4
+        assert_eq!(count_visual_lines("supercalifragilisticexpialidocious", 10), 4);
+
+        // "12345678901234567890" len=20
+        // max_width=10 -> full_lines=2, remainder=0.
+        // total_lines=2, line_width=0. loop ends. total=2.
+        assert_eq!(count_visual_lines("12345678901234567890", 10), 2);
+    }
+
+    #[test]
+    fn test_count_visual_lines_multiline() {
+        // "line1\nline2\n\nline4"
+        // line1: len=5 -> total=1
+        // line2: len=5 -> total=2
+        // empty: total=3
+        // line4: len=5 -> total=4
+        assert_eq!(count_visual_lines("line1\nline2\n\nline4", 10), 4);
+    }
+}
