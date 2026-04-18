@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Cell, Paragraph, Row, Table, TableState, Wrap},
+    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, TableState, Wrap},
 };
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
@@ -255,8 +255,10 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red))
-        .title(" Error ");
-    let para = Paragraph::new(msg).block(block);
+        .title(" Error (Press any key to dismiss) ");
+    let para = Paragraph::new(msg).block(block).wrap(Wrap { trim: true });
+
+    f.render_widget(Clear, area);
     f.render_widget(para, area);
 }
 
