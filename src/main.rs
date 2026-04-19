@@ -58,7 +58,7 @@ async fn run_app<B: ratatui::backend::Backend>(
     // Initial fetch
     match fetch_timers().await {
         Ok(timers) => {
-            app.timers = timers;
+            app.replace_timers(timers);
             app.error = None;
         }
         Err(e) => app.error = Some(e),
@@ -112,7 +112,7 @@ async fn run_app<B: ratatui::backend::Backend>(
                 // Slower refresh for the main list
                 match fetch_timers().await {
                     Ok(timers) => {
-                        app.timers = timers;
+                        app.replace_timers(timers);
                         app.error = None;
                     }
                     Err(e) => app.error = Some(e),
@@ -160,7 +160,7 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
                     Ok(_) => {
                         app.error = None;
                         match fetch_timers().await {
-                            Ok(timers) => app.timers = timers,
+                            Ok(timers) => app.replace_timers(timers),
                             Err(e) => app.error = Some(e),
                         }
                     }

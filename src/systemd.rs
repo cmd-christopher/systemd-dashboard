@@ -65,7 +65,7 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
     // 2. Assemble final info
     let now = Utc::now().timestamp_micros() as u64;
 
-    let timers = raw_timers
+    let mut timers: Vec<TimerInfo> = raw_timers
         .into_iter()
         .map(|raw| {
             let next_abs = format_time_abs(raw.next);
@@ -96,6 +96,9 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
             }
         })
         .collect();
+
+    // Sort alphabetically by unit name so timers maintain stable positions
+    timers.sort_by(|a, b| a.unit.cmp(&b.unit));
 
     Ok(timers)
 }

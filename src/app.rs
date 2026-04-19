@@ -127,6 +127,29 @@ impl App {
     pub fn selected_timer(&self) -> Option<&TimerInfo> {
         self.timers.get(self.selected_index)
     }
+
+    /// Replace the timer list while trying to keep the same timer selected.
+    /// If the previously selected timer is no longer in the list, the index
+    /// is clamped to the last valid position.
+    pub fn replace_timers(&mut self, new_timers: Vec<TimerInfo>) {
+        let selected_unit = self.selected_timer().map(|t| t.unit.clone());
+        self.timers = new_timers;
+        if self.timers.is_empty() {
+            self.selected_index = 0;
+            return;
+        }
+        if let Some(unit) = selected_unit {
+            if let Some(idx) = self.timers.iter().position(|t| t.unit == unit) {
+                self.selected_index = idx;
+            } else {
+                // Previously selected timer no longer in list, clamp
+                self.selected_index = self.selected_index.min(self.timers.len() - 1);
+            }
+        } else {
+            // No timer was selected before, clamp to valid range
+            self.selected_index = self.selected_index.min(self.timers.len() - 1);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -372,5 +395,146 @@ mod tests {
 
         app.next();
         assert_eq!(app.selected_index, 0); // Wraps to beginning
+    }
+
+    #[test]
+    fn replace_timers_keeps_selection_on_same_unit() {
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "alpha.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: "Active".into(),
+            schedule: String::new(),
+        });
+        app.timers.push(TimerInfo {
+            unit: "beta.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: "Inactive".into(),
+            schedule: String::new(),
+        });
+        app.timers.push(TimerInfo {
+            unit: "gamma.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: "Inactive".into(),
+            schedule: String::new(),
+        });
+        app.selected_index = 2; // gamma.timer
+
+        // Replace with reordered list (beta first, then alpha, then gamma)
+        let new_timers = vec![
+            TimerInfo {
+                unit: "beta.timer".into(),
+                activates: String::new(),
+                next_abs: String::new(),
+                last_abs: String::new(),
+                next_rel: String::new(),
+                last_rel: String::new(),
+                status: "Active".into(),
+                schedule: String::new(),
+            },
+            TimerInfo {
+                unit: "alpha.timer".into(),
+                activates: String::new(),
+                next_abs: String::new(),
+                last_abs: String::new(),
+                next_rel: String::new(),
+                last_rel: String::new(),
+                status: "Inactive".into(),
+                schedule: String::new(),
+            },
+            TimerInfo {
+                unit: "gamma.timer".into(),
+                activates: String::new(),
+                next_abs: String::new(),
+                last_abs: String::new(),
+                next_rel: String::new(),
+                last_rel: String::new(),
+                status: "Active".into(),
+                schedule: String::new(),
+            },
+        ];
+
+        app.replace_timers(new_timers);
+
+        // Should still select gamma.timer, now at index 2
+        assert_eq!(app.selected_index, 2);
+        assert_eq!(app.timers[app.selected_index].unit, "gamma.timer");
+    }
+
+    #[test]
+    fn replace_timers_clamps_when_selected_unit_removed() {
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "alpha.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: "Active".into(),
+            schedule: String::new(),
+        });
+        app.timers.push(TimerInfo {
+            unit: "beta.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            last_rel: String::new(),
+            next_rel: String::new(),
+            status: "Inactive".into(),
+            schedule: String::new(),
+        });
+        app.selected_index = 1; // beta.timer
+
+        // Replace with list that doesn't include beta.timer
+        let new_timers = vec![TimerInfo {
+            unit: "alpha.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            next_rel: String::new(),
+            last_rel: String::new(),
+            status: "Active".into(),
+            schedule: String::new(),
+        }];
+
+        app.replace_timers(new_timers);
+
+        // selected_index clamped to 0 (last valid index)
+        assert_eq!(app.selected_index, 0);
+        assert_eq!(app.timers[app.selected_index].unit, "alpha.timer");
+    }
+
+    #[test]
+    fn replace_timers_handles_empty_list() {
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "alpha.timer".into(),
+            activates: String::new(),
+            next_abs: String::new(),
+            last_abs: String::new(),
+            last_rel: String::new(),
+            next_rel: String::new(),
+            status: "Active".into(),
+            schedule: String::new(),
+        });
+        app.selected_index = 0;
+
+        app.replace_timers(vec![]);
+
+        assert_eq!(app.selected_index, 0);
+        assert!(app.timers.is_empty());
     }
 }
