@@ -287,9 +287,14 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
         ViewMode::List => {
             "q: Quit | j/k or \u{2191}/\u{2193}: Navigate | Enter: Detail | Space: Toggle"
         }
-        ViewMode::Detail => {
-            "q: Quit | Esc/Backspace: Back | Tab: Switch Pane | Arrows or j/k: Navigate Pane"
-        }
+        ViewMode::Detail => match app.detail_focus {
+            DetailPaneFocus::Top => {
+                "q: Quit | Esc/Backspace: Back | Tab: Focus Bottom | Arrows: Switch Mode"
+            }
+            DetailPaneFocus::Bottom => {
+                "q: Quit | Esc/Backspace: Back | Tab: Focus Top | Arrows or j/k: Scroll"
+            }
+        },
     };
 
     let footer = Paragraph::new(keybindings)
