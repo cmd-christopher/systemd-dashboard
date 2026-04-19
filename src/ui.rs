@@ -298,7 +298,7 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let footer = Paragraph::new(keybindings)
-        .style(Style::default().fg(Color::DarkGray).bg(Color::Black))
+        .style(Style::default().fg(Color::White).bg(Color::DarkGray))
         .alignment(ratatui::layout::Alignment::Center);
 
     f.render_widget(footer, area);
