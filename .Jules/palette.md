@@ -4,3 +4,6 @@
 ## 2025-02-12 - Error View Modal Redesign
 **Learning:** In terminal UIs with a split-pane layout, rendering error messages as a full-size override block obscures the background content, making the error feel disjointed from the action being taken. Using a centered layout to create a "modal" over the existing UI provides better context for the user.
 **Action:** Use ratatui's Layout constraints with `Clear` widget to build centered overlay popups instead of full-screen error components.
+## 2025-04-20 - Contextual Keybindings in TUI
+**Learning:** Generic keybinding labels like "Toggle" force users to translate the action into their current context (e.g., "Toggle means Start if Inactive, Stop if Active"). This adds cognitive load.
+**Action:** In TUI footer instructions, dynamically evaluate the selected item's state to provide specific, contextual action labels (e.g., "Start" or "Stop") using `std::borrow::Cow` to efficiently mix static strings with dynamically formatted context strings.

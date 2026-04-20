@@ -283,16 +283,25 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
 }
 
 fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
-    let keybindings = match app.mode {
+    let keybindings: std::borrow::Cow<'static, str> = match app.mode {
         ViewMode::List => {
-            "q: Quit | j/k or \u{2191}/\u{2193}: Navigate | Enter: Detail | Space: Toggle"
+            let space_action = if let Some(timer) = app.selected_timer() {
+                if timer.status == "Active" || timer.status == "Waiting" {
+                    "Stop"
+                } else {
+                    "Start"
+                }
+            } else {
+                "Toggle"
+            };
+            format!("q: Quit | j/k or \u{2191}/\u{2193}: Navigate | Enter: Detail | Space: {}", space_action).into()
         }
         ViewMode::Detail => match app.detail_focus {
             DetailPaneFocus::Top => {
-                "q: Quit | Esc/Backspace: Back | Tab: Focus Bottom | Arrows: Switch Mode"
+                "q: Quit | Esc/Backspace: Back | Tab: Focus Bottom | Arrows: Switch Mode".into()
             }
             DetailPaneFocus::Bottom => {
-                "q: Quit | Esc/Backspace: Back | Tab: Focus Top | Arrows or j/k: Scroll"
+                "q: Quit | Esc/Backspace: Back | Tab: Focus Top | Arrows or j/k: Scroll".into()
             }
         },
     };
