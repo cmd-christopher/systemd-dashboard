@@ -118,6 +118,20 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Row::new(cells).height(1)
     });
 
+    if app.timers.is_empty() {
+        let empty_msg = "\n\nNo user systemd timers found.\n\nCreate a timer in ~/.config/systemd/user/ to see it here.";
+        let empty_para = Paragraph::new(empty_msg)
+            .alignment(ratatui::layout::Alignment::Center)
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Magenta))
+                    .title(" Systemd Timers "),
+            );
+        f.render_widget(empty_para, area);
+        return;
+    }
+
     let t = Table::new(
         rows,
         [
