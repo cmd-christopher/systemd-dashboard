@@ -80,6 +80,21 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
 }
 
 fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
+    if app.timers.is_empty() {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Magenta))
+            .title(" Systemd Timers ");
+        let msg = Paragraph::new(
+            "\n\nNo systemd timers found. Ensure systemd is running and accessible.",
+        )
+        .block(block)
+        .alignment(ratatui::layout::Alignment::Center)
+        .wrap(Wrap { trim: true });
+        f.render_widget(msg, area);
+        return;
+    }
+
     let selected_style = Style::default().add_modifier(Modifier::REVERSED);
     let normal_style = Style::default().bg(Color::Blue);
     let header_cells = ["Unit", "Schedule", "Last Run", "Next Run", "Status"]
