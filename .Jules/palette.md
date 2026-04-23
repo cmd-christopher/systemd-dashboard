@@ -4,3 +4,6 @@
 ## 2025-02-12 - Error View Modal Redesign
 **Learning:** In terminal UIs with a split-pane layout, rendering error messages as a full-size override block obscures the background content, making the error feel disjointed from the action being taken. Using a centered layout to create a "modal" over the existing UI provides better context for the user.
 **Action:** Use ratatui's Layout constraints with `Clear` widget to build centered overlay popups instead of full-screen error components.
+## 2023-10-27 - Added Empty State for Timer List
+**Learning:** Adding empty states to list views helps users understand how to start using the app.
+**Action:** When a TUI list view can be empty, provide actionable instructions on how to populate it.
