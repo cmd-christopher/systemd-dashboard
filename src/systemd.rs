@@ -2,7 +2,6 @@ use chrono::{Local, TimeZone, Utc};
 use serde::Deserialize;
 use std::collections::HashMap;
 use tokio::process::Command;
-use tokio::task::JoinSet;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct RawTimerInfo {
@@ -46,21 +45,8 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
     let raw_timers: Vec<RawTimerInfo> = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("Failed to parse JSON: {}", e))?;
 
-    let mut schedules = HashMap::new();
-    let mut schedule_tasks = JoinSet::new();
-    for raw in &raw_timers {
-        let unit = raw.unit.clone();
-        schedule_tasks.spawn(async move {
-            let schedule = fetch_timer_schedule(&unit).await;
-            (unit, schedule)
-        });
-    }
-
-    while let Some(result) = schedule_tasks.join_next().await {
-        let (unit, schedule) =
-            result.map_err(|e| format!("Failed to join schedule task: {}", e))?;
-        schedules.insert(unit, schedule);
-    }
+    let timer_units: Vec<String> = raw_timers.iter().map(|raw| raw.unit.clone()).collect();
+    let schedules = fetch_timer_schedules(&timer_units).await;
 
     // 2. Assemble final info
     let now = Utc::now().timestamp_micros() as u64;
@@ -164,65 +150,90 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
     }
 }
 
-async fn fetch_timer_schedule(timer_unit: &str) -> String {
+async fn fetch_timer_schedules(timer_units: &[String]) -> HashMap<String, String> {
+    if timer_units.is_empty() {
+        return HashMap::new();
+    }
+
+    let mut args = vec![
+        "--user".to_string(),
+        "show".to_string(),
+        "-p".to_string(),
+        "Id".to_string(),
+        "-p".to_string(),
+        "OnCalendar".to_string(),
+        "-p".to_string(),
+        "OnBootSec".to_string(),
+        "-p".to_string(),
+        "OnStartupSec".to_string(),
+        "-p".to_string(),
+        "OnActiveSec".to_string(),
+        "-p".to_string(),
+        "OnUnitActiveSec".to_string(),
+        "-p".to_string(),
+        "OnUnitInactiveSec".to_string(),
+        "-p".to_string(),
+        "TimersCalendar".to_string(),
+        "-p".to_string(),
+        "TimersMonotonic".to_string(),
+        "--no-pager".to_string(),
+        "--".to_string(),
+    ];
+
+    args.extend(timer_units.iter().cloned());
+
     let output = Command::new("systemctl")
-        .args(&[
-            "--user",
-            "show",
-            "-p",
-            "OnCalendar",
-            "-p",
-            "OnBootSec",
-            "-p",
-            "OnStartupSec",
-            "-p",
-            "OnActiveSec",
-            "-p",
-            "OnUnitActiveSec",
-            "-p",
-            "OnUnitInactiveSec",
-            "-p",
-            "TimersCalendar",
-            "-p",
-            "TimersMonotonic",
-            "--no-pager",
-            "--",
-            timer_unit,
-        ])
+        .args(&args)
         .output()
         .await;
 
     match output {
-        Ok(o) if o.status.success() => extract_timer_schedule(&String::from_utf8_lossy(&o.stdout)),
-        Ok(_) => "n/a".to_string(),
-        Err(_) => "n/a".to_string(),
+        Ok(o) if o.status.success() => extract_timer_schedules(&String::from_utf8_lossy(&o.stdout)),
+        Ok(_) => HashMap::new(),
+        Err(_) => HashMap::new(),
     }
 }
 
-fn extract_timer_schedule(stdout: &str) -> String {
-    let mut schedules = Vec::new();
+fn extract_timer_schedules(stdout: &str) -> HashMap<String, String> {
+    let mut results = HashMap::new();
+    let mut current_id = None;
+    let mut current_schedules = Vec::new();
 
     for line in stdout.lines() {
-        if let Some(value) = line.strip_prefix("OnCalendar=") {
-            push_schedule_value(&mut schedules, "OnCalendar", value);
+        if line.trim().is_empty() {
+            if let Some(id) = current_id.take() {
+                results.insert(id, dedupe_schedule_values(current_schedules));
+            }
+            current_schedules = Vec::new();
+            continue;
+        }
+
+        if let Some(id) = line.strip_prefix("Id=") {
+            current_id = Some(id.to_string());
+        } else if let Some(value) = line.strip_prefix("OnCalendar=") {
+            push_schedule_value(&mut current_schedules, "OnCalendar", value);
         } else if let Some(value) = line.strip_prefix("OnBootSec=") {
-            push_schedule_value(&mut schedules, "OnBootSec", value);
+            push_schedule_value(&mut current_schedules, "OnBootSec", value);
         } else if let Some(value) = line.strip_prefix("OnStartupSec=") {
-            push_schedule_value(&mut schedules, "OnStartupSec", value);
+            push_schedule_value(&mut current_schedules, "OnStartupSec", value);
         } else if let Some(value) = line.strip_prefix("OnActiveSec=") {
-            push_schedule_value(&mut schedules, "OnActiveSec", value);
+            push_schedule_value(&mut current_schedules, "OnActiveSec", value);
         } else if let Some(value) = line.strip_prefix("OnUnitActiveSec=") {
-            push_schedule_value(&mut schedules, "OnUnitActiveSec", value);
+            push_schedule_value(&mut current_schedules, "OnUnitActiveSec", value);
         } else if let Some(value) = line.strip_prefix("OnUnitInactiveSec=") {
-            push_schedule_value(&mut schedules, "OnUnitInactiveSec", value);
+            push_schedule_value(&mut current_schedules, "OnUnitInactiveSec", value);
         } else if let Some(value) = line.strip_prefix("TimersCalendar={") {
-            collect_timer_block_values(value, &mut schedules);
+            collect_timer_block_values(value, &mut current_schedules);
         } else if let Some(value) = line.strip_prefix("TimersMonotonic={") {
-            collect_timer_block_values(value, &mut schedules);
+            collect_timer_block_values(value, &mut current_schedules);
         }
     }
 
-    dedupe_schedule_values(schedules)
+    if let Some(id) = current_id {
+        results.insert(id, dedupe_schedule_values(current_schedules));
+    }
+
+    results
 }
 
 fn collect_timer_block_values(block: &str, schedules: &mut Vec<String>) {
@@ -356,7 +367,7 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        extract_timer_schedule, format_time_abs, format_time_rel, normalize_service_file_output,
+        extract_timer_schedules, format_time_abs, format_time_rel, normalize_service_file_output,
     };
 
     #[test]
@@ -385,18 +396,18 @@ mod tests {
 
     #[test]
     fn timer_schedule_extracts_calendar_and_monotonic_values() {
-        let output = extract_timer_schedule("OnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
+        let output = extract_timer_schedules("Id=test.timer\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
 
-        assert_eq!(output, "*-*-* 04:00:00, OnUnitActiveSec=1d");
+        assert_eq!(output.get("test.timer").unwrap(), "*-*-* 04:00:00, OnUnitActiveSec=1d");
     }
 
     #[test]
     fn timer_schedule_parses_timer_blocks() {
-        let output = extract_timer_schedule(
-            "TimersCalendar={ OnCalendar=*-*-* *:00/30:00 ; next_elapse=1711111111111111 }\nTimersMonotonic={ OnBootSec=5min ; next_elapse=1711111111111112 }\n",
+        let output = extract_timer_schedules(
+            "Id=test2.timer\nTimersCalendar={ OnCalendar=*-*-* *:00/30:00 ; next_elapse=1711111111111111 }\nTimersMonotonic={ OnBootSec=5min ; next_elapse=1711111111111112 }\n",
         );
 
-        assert_eq!(output, "*-*-* *:00/30:00, OnBootSec=5min");
+        assert_eq!(output.get("test2.timer").unwrap(), "*-*-* *:00/30:00, OnBootSec=5min");
     }
 
     #[test]
