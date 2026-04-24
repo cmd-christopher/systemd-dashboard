@@ -7,3 +7,6 @@
 ## 2023-10-27 - Added Empty State for Timer List
 **Learning:** Adding empty states to list views helps users understand how to start using the app.
 **Action:** When a TUI list view can be empty, provide actionable instructions on how to populate it.
+## 2025-05-15 - Added visual scrollbar to log and service file views
+**Learning:** Terminal UIs showing scrollable content like logs or service files should provide a visual cue when the content overflows the view area. This acts as an affordance, helping users immediately understand that there is more content to explore and roughly how much.
+**Action:** When creating text views with scrolling functionality, append a `Scrollbar` from Ratatui to the view. Make sure to render it after the main text widget, bound to the same `Rect`, to correctly position it.
