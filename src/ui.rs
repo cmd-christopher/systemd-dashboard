@@ -1,10 +1,13 @@
 use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
 use ratatui::{
     Frame,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Table, TableState, Wrap},
+    widgets::{
+        Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, Table, TableState, Wrap,
+    },
 };
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
@@ -263,6 +266,18 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .scroll((app.detail_scroll as u16, 0));
 
     f.render_widget(logs_list, chunks[1]);
+
+    let mut scrollbar_state =
+        ScrollbarState::new(app.detail_max_scroll).position(app.detail_scroll);
+    let scrollbar = Scrollbar::default()
+        .orientation(ScrollbarOrientation::VerticalRight)
+        .begin_symbol(Some("↑"))
+        .end_symbol(Some("↓"));
+    let scrollbar_area = chunks[1].inner(&Margin {
+        vertical: 1,
+        horizontal: 0,
+    });
+    f.render_stateful_widget(scrollbar, scrollbar_area, &mut scrollbar_state);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {

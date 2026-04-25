@@ -182,10 +182,7 @@ async fn fetch_timer_schedules(timer_units: &[String]) -> HashMap<String, String
 
     args.extend(timer_units.iter().cloned());
 
-    let output = Command::new("systemctl")
-        .args(&args)
-        .output()
-        .await;
+    let output = Command::new("systemctl").args(&args).output().await;
 
     match output {
         Ok(o) if o.status.success() => extract_timer_schedules(&String::from_utf8_lossy(&o.stdout)),
@@ -396,9 +393,14 @@ mod tests {
 
     #[test]
     fn timer_schedule_extracts_calendar_and_monotonic_values() {
-        let output = extract_timer_schedules("Id=test.timer\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
+        let output = extract_timer_schedules(
+            "Id=test.timer\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n",
+        );
 
-        assert_eq!(output.get("test.timer").unwrap(), "*-*-* 04:00:00, OnUnitActiveSec=1d");
+        assert_eq!(
+            output.get("test.timer").unwrap(),
+            "*-*-* 04:00:00, OnUnitActiveSec=1d"
+        );
     }
 
     #[test]
@@ -407,7 +409,10 @@ mod tests {
             "Id=test2.timer\nTimersCalendar={ OnCalendar=*-*-* *:00/30:00 ; next_elapse=1711111111111111 }\nTimersMonotonic={ OnBootSec=5min ; next_elapse=1711111111111112 }\n",
         );
 
-        assert_eq!(output.get("test2.timer").unwrap(), "*-*-* *:00/30:00, OnBootSec=5min");
+        assert_eq!(
+            output.get("test2.timer").unwrap(),
+            "*-*-* *:00/30:00, OnBootSec=5min"
+        );
     }
 
     #[test]

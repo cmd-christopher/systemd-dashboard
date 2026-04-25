@@ -7,3 +7,6 @@
 ## 2023-10-27 - Added Empty State for Timer List
 **Learning:** Adding empty states to list views helps users understand how to start using the app.
 **Action:** When a TUI list view can be empty, provide actionable instructions on how to populate it.
+## 2025-04-25 - Essential affordance for scrollable text via Scrollbar
+**Learning:** For long, scrollable text areas like logs or detailed configurations in TUI applications, users often lose context on their scroll position and the total content extent without visual cues. Adding a stateful `Scrollbar` component tied to the same layout constraints significantly improves navigation intuitiveness.
+**Action:** When implementing scrollable views using ratatui's `scroll` feature on Paragraph or List widgets, always render an accompanying `Scrollbar` bound to the parent area's `.inner()` margins to avoid border overlap and provide immediate visual feedback.
