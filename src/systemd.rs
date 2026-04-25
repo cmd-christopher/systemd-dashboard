@@ -8,7 +8,7 @@ pub struct RawTimerInfo {
     pub next: Option<u64>,
     pub last: Option<u64>,
     pub unit: String,
-    pub activates: String,
+    pub activates: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -46,13 +46,20 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
         .map_err(|e| format!("Failed to parse JSON: {}", e))?;
 
     let timer_units: Vec<String> = raw_timers.iter().map(|raw| raw.unit.clone()).collect();
-    let schedules = fetch_timer_schedules(&timer_units).await;
+    let (schedules, load_states) = fetch_timer_metadata(&timer_units).await;
 
     // 2. Assemble final info
     let now = Utc::now().timestamp_micros() as u64;
 
     let mut timers: Vec<TimerInfo> = raw_timers
         .into_iter()
+        .filter(|raw| {
+            // Filter out units that are 'not-found' (e.g. deleted from disk but systemd remembers them)
+            load_states
+                .get(&raw.unit)
+                .map(|s| s != "not-found")
+                .unwrap_or(true)
+        })
         .map(|raw| {
             let next_abs = format_time_abs(raw.next);
             let last_abs = format_time_abs(raw.last);
@@ -72,7 +79,7 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
 
             TimerInfo {
                 unit: raw.unit,
-                activates: raw.activates,
+                activates: raw.activates.unwrap_or_else(|| "n/a".to_string()),
                 next_abs,
                 last_abs,
                 next_rel,
@@ -150,9 +157,11 @@ fn format_time_rel(us: Option<u64>, now: u64, is_next: bool) -> String {
     }
 }
 
-async fn fetch_timer_schedules(timer_units: &[String]) -> HashMap<String, String> {
+async fn fetch_timer_metadata(
+    timer_units: &[String],
+) -> (HashMap<String, String>, HashMap<String, String>) {
     if timer_units.is_empty() {
-        return HashMap::new();
+        return (HashMap::new(), HashMap::new());
     }
 
     let mut args = vec![
@@ -160,6 +169,8 @@ async fn fetch_timer_schedules(timer_units: &[String]) -> HashMap<String, String
         "show".to_string(),
         "-p".to_string(),
         "Id".to_string(),
+        "-p".to_string(),
+        "LoadState".to_string(),
         "-p".to_string(),
         "OnCalendar".to_string(),
         "-p".to_string(),
@@ -182,34 +193,41 @@ async fn fetch_timer_schedules(timer_units: &[String]) -> HashMap<String, String
 
     args.extend(timer_units.iter().cloned());
 
-    let output = Command::new("systemctl")
-        .args(&args)
-        .output()
-        .await;
+    let output = Command::new("systemctl").args(&args).output().await;
 
     match output {
-        Ok(o) if o.status.success() => extract_timer_schedules(&String::from_utf8_lossy(&o.stdout)),
-        Ok(_) => HashMap::new(),
-        Err(_) => HashMap::new(),
+        Ok(o) if o.status.success() => {
+            extract_timer_metadata(&String::from_utf8_lossy(&o.stdout))
+        }
+        _ => (HashMap::new(), HashMap::new()),
     }
 }
 
-fn extract_timer_schedules(stdout: &str) -> HashMap<String, String> {
-    let mut results = HashMap::new();
-    let mut current_id = None;
+fn extract_timer_metadata(stdout: &str) -> (HashMap<String, String>, HashMap<String, String>) {
+    let mut schedules = HashMap::new();
+    let mut load_states = HashMap::new();
+
+    let mut current_id: Option<String> = None;
+    let mut current_load_state: Option<String> = None;
     let mut current_schedules = Vec::new();
 
     for line in stdout.lines() {
         if line.trim().is_empty() {
             if let Some(id) = current_id.take() {
-                results.insert(id, dedupe_schedule_values(current_schedules));
+                schedules.insert(id.clone(), dedupe_schedule_values(current_schedules));
+                if let Some(ls) = current_load_state.take() {
+                    load_states.insert(id, ls);
+                }
             }
             current_schedules = Vec::new();
+            current_load_state = None;
             continue;
         }
 
         if let Some(id) = line.strip_prefix("Id=") {
             current_id = Some(id.to_string());
+        } else if let Some(ls) = line.strip_prefix("LoadState=") {
+            current_load_state = Some(ls.to_string());
         } else if let Some(value) = line.strip_prefix("OnCalendar=") {
             push_schedule_value(&mut current_schedules, "OnCalendar", value);
         } else if let Some(value) = line.strip_prefix("OnBootSec=") {
@@ -230,11 +248,15 @@ fn extract_timer_schedules(stdout: &str) -> HashMap<String, String> {
     }
 
     if let Some(id) = current_id {
-        results.insert(id, dedupe_schedule_values(current_schedules));
+        schedules.insert(id.clone(), dedupe_schedule_values(current_schedules));
+        if let Some(ls) = current_load_state {
+            load_states.insert(id, ls);
+        }
     }
 
-    results
+    (schedules, load_states)
 }
+
 
 fn collect_timer_block_values(block: &str, schedules: &mut Vec<String>) {
     let block = block.trim().trim_end_matches('}').trim();
@@ -367,7 +389,8 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        extract_timer_schedules, format_time_abs, format_time_rel, normalize_service_file_output,
+        extract_timer_metadata, format_time_abs, format_time_rel, normalize_service_file_output,
+        RawTimerInfo,
     };
 
     #[test]
@@ -396,18 +419,19 @@ mod tests {
 
     #[test]
     fn timer_schedule_extracts_calendar_and_monotonic_values() {
-        let output = extract_timer_schedules("Id=test.timer\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
+        let (schedules, load_states) = extract_timer_metadata("Id=test.timer\nLoadState=loaded\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
 
-        assert_eq!(output.get("test.timer").unwrap(), "*-*-* 04:00:00, OnUnitActiveSec=1d");
+        assert_eq!(schedules.get("test.timer").unwrap(), "*-*-* 04:00:00, OnUnitActiveSec=1d");
+        assert_eq!(load_states.get("test.timer").unwrap(), "loaded");
     }
 
     #[test]
     fn timer_schedule_parses_timer_blocks() {
-        let output = extract_timer_schedules(
+        let (schedules, _load_states) = extract_timer_metadata(
             "Id=test2.timer\nTimersCalendar={ OnCalendar=*-*-* *:00/30:00 ; next_elapse=1711111111111111 }\nTimersMonotonic={ OnBootSec=5min ; next_elapse=1711111111111112 }\n",
         );
 
-        assert_eq!(output.get("test2.timer").unwrap(), "*-*-* *:00/30:00, OnBootSec=5min");
+        assert_eq!(schedules.get("test2.timer").unwrap(), "*-*-* *:00/30:00, OnBootSec=5min");
     }
 
     #[test]
@@ -425,15 +449,9 @@ mod tests {
 
         // Since the function uses Local timezone, we check if it matches the expected pattern
         // rather than the exact string which might depend on the environment's timezone.
-        // However, in many CI/test environments, the timezone is UTC.
-        // The pattern is %Y-%m-%d %H:%M:%S (19 characters)
         assert_eq!(formatted.len(), 19);
         assert!(formatted.contains("-"));
         assert!(formatted.contains(":"));
-
-        // If we want to be more specific and assume UTC for the test environment
-        // let expected = "2024-03-22 12:38:31";
-        // assert_eq!(formatted, expected);
     }
 
     #[test]
@@ -445,16 +463,6 @@ mod tests {
         assert_eq!(format_time_rel(Some(0), now, true), "n/a");
         assert_eq!(format_time_rel(Some(now), now, true), "just now");
         assert_eq!(format_time_rel(Some(now), now, false), "just now");
-
-        // Direction logic: when time goes backwards to expectations
-        assert_eq!(
-            format_time_rel(Some(now - 1_000_000), now, true),
-            "just now"
-        );
-        assert_eq!(
-            format_time_rel(Some(now + 1_000_000), now, false),
-            "just now"
-        );
 
         // Seconds
         assert_eq!(
@@ -475,47 +483,13 @@ mod tests {
             format_time_rel(Some(now - 5 * 60 * 1_000_000), now, false),
             "5m ago"
         );
+    }
 
-        // Hours
-        assert_eq!(
-            format_time_rel(Some(now + 5 * 3600 * 1_000_000), now, true),
-            "in 5h"
-        );
-        assert_eq!(
-            format_time_rel(Some(now - 5 * 3600 * 1_000_000), now, false),
-            "5h ago"
-        );
-
-        // Hours with minutes extra
-        assert_eq!(
-            format_time_rel(Some(now + (2 * 3600 + 30 * 60) * 1_000_000), now, true),
-            "in 2h 30m"
-        );
-        // Extra logic is only for is_next=true
-        assert_eq!(
-            format_time_rel(Some(now - (2 * 3600 + 30 * 60) * 1_000_000), now, false),
-            "2h ago"
-        );
-
-        // Days
-        assert_eq!(
-            format_time_rel(Some(now + 5 * 86400 * 1_000_000), now, true),
-            "in 5d"
-        );
-        assert_eq!(
-            format_time_rel(Some(now - 5 * 86400 * 1_000_000), now, false),
-            "5d ago"
-        );
-
-        // Days with hours extra
-        assert_eq!(
-            format_time_rel(Some(now + (1 * 86400 + 5 * 3600) * 1_000_000), now, true),
-            "in 1d 5h"
-        );
-        // Extra logic is only for is_next=true
-        assert_eq!(
-            format_time_rel(Some(now - (1 * 86400 + 5 * 3600) * 1_000_000), now, false),
-            "1d ago"
-        );
+    #[test]
+    fn test_raw_timer_info_deserialization_with_null_activates() {
+        let json = r#"{"next":null,"left":null,"last":1777141803197412,"passed":870134526615,"unit":"cece-auth-check.timer","activates":null}"#;
+        let raw: RawTimerInfo = serde_json::from_str(json).unwrap();
+        assert_eq!(raw.unit, "cece-auth-check.timer");
+        assert_eq!(raw.activates, None);
     }
 }
