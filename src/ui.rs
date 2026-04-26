@@ -231,8 +231,20 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(status_para, chunks[0]);
 
     let bottom_title = match app.detail_content_mode {
-        DetailContentMode::Logs => "Bottom Pane: Logs",
-        DetailContentMode::ServiceFile => "Bottom Pane: Service File",
+        DetailContentMode::Logs => {
+            if app.auto_scroll {
+                Line::from(vec![
+                    Span::raw(" Bottom Pane: Logs "),
+                    Span::styled("[Auto-scroll: On] ", Style::default().fg(Color::Green)),
+                ])
+            } else {
+                Line::from(vec![
+                    Span::raw(" Bottom Pane: Logs "),
+                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::DarkGray)),
+                ])
+            }
+        }
+        DetailContentMode::ServiceFile => Line::from(" Bottom Pane: Service File "),
     };
     let logs_block = Block::default()
         .borders(Borders::ALL)
