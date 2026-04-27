@@ -134,20 +134,25 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
             if let Some(timer) = app.selected_timer() {
                 let unit = timer.unit.clone();
                 let activates = timer.activates.clone();
-                match fetch_timer_status(&unit).await {
+
+                let (status_res, logs_res) =
+                    tokio::join!(fetch_timer_status(&unit), fetch_timer_logs(&activates));
+
+                match status_res {
                     Ok(status) => app.detail_status = status,
                     Err(e) => {
                         app.error = Some(e);
                         app.detail_status = "Error fetching status".to_string();
                     }
                 }
-                match fetch_timer_logs(&activates).await {
+                match logs_res {
                     Ok(logs) => app.detail_logs = logs,
                     Err(e) => {
                         app.error = Some(e);
                         app.detail_logs = "Error fetching logs".to_string();
                     }
                 }
+
                 app.enter_detail();
             }
         }

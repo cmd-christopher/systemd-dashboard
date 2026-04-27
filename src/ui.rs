@@ -4,7 +4,10 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table, TableState, Wrap},
+    widgets::{
+        Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
+        ScrollbarState, Table, TableState, Wrap,
+    },
 };
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
@@ -277,8 +280,8 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(logs_list, chunks[1]);
 
     if app.detail_max_scroll > 0 {
-        let mut scrollbar_state = ScrollbarState::new(app.detail_max_scroll)
-            .position(app.detail_scroll);
+        let mut scrollbar_state =
+            ScrollbarState::new(app.detail_max_scroll).position(app.detail_scroll);
         f.render_stateful_widget(
             Scrollbar::new(ScrollbarOrientation::VerticalRight)
                 .begin_symbol(Some("↑"))
