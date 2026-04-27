@@ -196,9 +196,7 @@ async fn fetch_timer_metadata(
     let output = Command::new("systemctl").args(&args).output().await;
 
     match output {
-        Ok(o) if o.status.success() => {
-            extract_timer_metadata(&String::from_utf8_lossy(&o.stdout))
-        }
+        Ok(o) if o.status.success() => extract_timer_metadata(&String::from_utf8_lossy(&o.stdout)),
         _ => (HashMap::new(), HashMap::new()),
     }
 }
@@ -228,22 +226,24 @@ fn extract_timer_metadata(stdout: &str) -> (HashMap<String, String>, HashMap<Str
             current_id = Some(id.to_string());
         } else if let Some(ls) = line.strip_prefix("LoadState=") {
             current_load_state = Some(ls.to_string());
-        } else if let Some(value) = line.strip_prefix("OnCalendar=") {
-            push_schedule_value(&mut current_schedules, "OnCalendar", value);
-        } else if let Some(value) = line.strip_prefix("OnBootSec=") {
-            push_schedule_value(&mut current_schedules, "OnBootSec", value);
-        } else if let Some(value) = line.strip_prefix("OnStartupSec=") {
-            push_schedule_value(&mut current_schedules, "OnStartupSec", value);
-        } else if let Some(value) = line.strip_prefix("OnActiveSec=") {
-            push_schedule_value(&mut current_schedules, "OnActiveSec", value);
-        } else if let Some(value) = line.strip_prefix("OnUnitActiveSec=") {
-            push_schedule_value(&mut current_schedules, "OnUnitActiveSec", value);
-        } else if let Some(value) = line.strip_prefix("OnUnitInactiveSec=") {
-            push_schedule_value(&mut current_schedules, "OnUnitInactiveSec", value);
         } else if let Some(value) = line.strip_prefix("TimersCalendar={") {
             collect_timer_block_values(value, &mut current_schedules);
         } else if let Some(value) = line.strip_prefix("TimersMonotonic={") {
             collect_timer_block_values(value, &mut current_schedules);
+        } else {
+            for &prefix in &[
+                "OnCalendar",
+                "OnBootSec",
+                "OnStartupSec",
+                "OnActiveSec",
+                "OnUnitActiveSec",
+                "OnUnitInactiveSec",
+            ] {
+                if let Some(value) = line.strip_prefix(prefix).and_then(|r| r.strip_prefix('=')) {
+                    push_schedule_value(&mut current_schedules, prefix, value);
+                    break;
+                }
+            }
         }
     }
 
@@ -256,7 +256,6 @@ fn extract_timer_metadata(stdout: &str) -> (HashMap<String, String>, HashMap<Str
 
     (schedules, load_states)
 }
-
 
 fn collect_timer_block_values(block: &str, schedules: &mut Vec<String>) {
     let block = block.trim().trim_end_matches('}').trim();
@@ -389,8 +388,8 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        extract_timer_metadata, format_time_abs, format_time_rel, normalize_service_file_output,
-        RawTimerInfo,
+        RawTimerInfo, extract_timer_metadata, format_time_abs, format_time_rel,
+        normalize_service_file_output,
     };
 
     #[test]
@@ -419,9 +418,14 @@ mod tests {
 
     #[test]
     fn timer_schedule_extracts_calendar_and_monotonic_values() {
-        let (schedules, load_states) = extract_timer_metadata("Id=test.timer\nLoadState=loaded\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n");
+        let (schedules, load_states) = extract_timer_metadata(
+            "Id=test.timer\nLoadState=loaded\nOnCalendar=*-*-* 04:00:00\nOnUnitActiveSec=1d\n",
+        );
 
-        assert_eq!(schedules.get("test.timer").unwrap(), "*-*-* 04:00:00, OnUnitActiveSec=1d");
+        assert_eq!(
+            schedules.get("test.timer").unwrap(),
+            "*-*-* 04:00:00, OnUnitActiveSec=1d"
+        );
         assert_eq!(load_states.get("test.timer").unwrap(), "loaded");
     }
 
@@ -431,7 +435,10 @@ mod tests {
             "Id=test2.timer\nTimersCalendar={ OnCalendar=*-*-* *:00/30:00 ; next_elapse=1711111111111111 }\nTimersMonotonic={ OnBootSec=5min ; next_elapse=1711111111111112 }\n",
         );
 
-        assert_eq!(schedules.get("test2.timer").unwrap(), "*-*-* *:00/30:00, OnBootSec=5min");
+        assert_eq!(
+            schedules.get("test2.timer").unwrap(),
+            "*-*-* *:00/30:00, OnBootSec=5min"
+        );
     }
 
     #[test]
