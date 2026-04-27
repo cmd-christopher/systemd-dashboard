@@ -164,34 +164,34 @@ async fn fetch_timer_metadata(
         return (HashMap::new(), HashMap::new());
     }
 
-    let mut args = vec![
-        "--user".to_string(),
-        "show".to_string(),
-        "-p".to_string(),
-        "Id".to_string(),
-        "-p".to_string(),
-        "LoadState".to_string(),
-        "-p".to_string(),
-        "OnCalendar".to_string(),
-        "-p".to_string(),
-        "OnBootSec".to_string(),
-        "-p".to_string(),
-        "OnStartupSec".to_string(),
-        "-p".to_string(),
-        "OnActiveSec".to_string(),
-        "-p".to_string(),
-        "OnUnitActiveSec".to_string(),
-        "-p".to_string(),
-        "OnUnitInactiveSec".to_string(),
-        "-p".to_string(),
-        "TimersCalendar".to_string(),
-        "-p".to_string(),
-        "TimersMonotonic".to_string(),
-        "--no-pager".to_string(),
-        "--".to_string(),
+    let mut args: Vec<&str> = vec![
+        "--user",
+        "show",
+        "-p",
+        "Id",
+        "-p",
+        "LoadState",
+        "-p",
+        "OnCalendar",
+        "-p",
+        "OnBootSec",
+        "-p",
+        "OnStartupSec",
+        "-p",
+        "OnActiveSec",
+        "-p",
+        "OnUnitActiveSec",
+        "-p",
+        "OnUnitInactiveSec",
+        "-p",
+        "TimersCalendar",
+        "-p",
+        "TimersMonotonic",
+        "--no-pager",
+        "--",
     ];
 
-    args.extend(timer_units.iter().cloned());
+    args.extend(timer_units.iter().map(|s| s.as_str()));
 
     let output = Command::new("systemctl").args(&args).output().await;
 
