@@ -351,6 +351,41 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+    use crate::systemd::TimerInfo;
+
+    #[test]
+    fn test_draw_list_empty() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+
+        terminal.draw(|f| {
+            draw_list(f, &mut app, f.size());
+        }).unwrap();
+    }
+
+    #[test]
+    fn test_draw_list_with_items() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+
+        terminal.draw(|f| {
+            draw_list(f, &mut app, f.size());
+        }).unwrap();
+    }
+
 
     #[test]
     fn test_count_visual_lines_zero_width() {
