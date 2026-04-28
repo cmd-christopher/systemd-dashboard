@@ -10,3 +10,6 @@
 ## 2025-05-15 - Added visual scrollbar to log and service file views
 **Learning:** Terminal UIs showing scrollable content like logs or service files should provide a visual cue when the content overflows the view area. This acts as an affordance, helping users immediately understand that there is more content to explore and roughly how much.
 **Action:** When creating text views with scrolling functionality, append a `Scrollbar` from Ratatui to the view. Make sure to render it after the main text widget, bound to the same `Rect`, to correctly position it.
+## 2025-05-18 - Visual scrollbar missing from timer list
+**Learning:** Adding a scrollbar to scrollable list views (like a list of systemd timers) provides a crucial visual cue about list length and cursor position. `ratatui` provides an easy-to-use `Scrollbar` widget for this.
+**Action:** When a TUI list view can have multiple items that might require scrolling, conditionally render a `Scrollbar` on the right side using `.inner` margins.

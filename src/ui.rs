@@ -159,6 +159,21 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     state.select(Some(app.selected_index));
 
     f.render_stateful_widget(t, area, &mut state);
+
+    if app.timers.len() > 1 {
+        let mut scrollbar_state =
+            ScrollbarState::new(app.timers.len() - 1).position(app.selected_index);
+        f.render_stateful_widget(
+            Scrollbar::new(ScrollbarOrientation::VerticalRight)
+                .begin_symbol(Some("↑"))
+                .end_symbol(Some("↓")),
+            area.inner(&ratatui::layout::Margin {
+                vertical: 1,
+                horizontal: 0,
+            }),
+            &mut scrollbar_state,
+        );
+    }
 }
 
 fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
@@ -351,8 +366,8 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::{backend::TestBackend, Terminal};
     use crate::systemd::TimerInfo;
+    use ratatui::{Terminal, backend::TestBackend};
 
     #[test]
     fn test_draw_list_empty() {
@@ -360,9 +375,11 @@ mod tests {
         let mut terminal = Terminal::new(backend).unwrap();
         let mut app = App::new();
 
-        terminal.draw(|f| {
-            draw_list(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
     }
 
     #[test]
@@ -381,11 +398,12 @@ mod tests {
             schedule: "daily".into(),
         });
 
-        terminal.draw(|f| {
-            draw_list(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
     }
-
 
     #[test]
     fn test_count_visual_lines_zero_width() {
