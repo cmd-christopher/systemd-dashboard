@@ -531,4 +531,76 @@ mod tests {
         // line4: len=5 -> total=4
         assert_eq!(count_visual_lines("line1\nline2\n\nline4", 10), 4);
     }
+
+    #[test]
+    fn test_draw_ui_list_mode() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+
+        terminal.draw(|f| {
+            draw_ui(f, &mut app);
+        }).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Systemd Timers"));
+    }
+
+    #[test]
+    fn test_draw_ui_detail_mode() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.enter_detail();
+
+        terminal.draw(|f| {
+            draw_ui(f, &mut app);
+        }).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Unknown"));
+    }
+
+    #[test]
+    fn test_draw_ui_with_error() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.error = Some("Test Error Message".into());
+
+        terminal.draw(|f| {
+            draw_ui(f, &mut app);
+        }).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Error (Press any key to dismiss)"));
+        assert!(content.contains("Test Error Message"));
+    }
 }
