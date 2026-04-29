@@ -98,10 +98,14 @@ async fn run_app<B: ratatui::backend::Backend>(
                     if let Some(timer) = app.selected_timer() {
                         let unit = timer.unit.clone();
                         match fetch_timer_status(&unit).await {
-                            Ok(status) => app.detail_status = status,
+                            Ok(status) => {
+                                app.detail_status = status;
+                                app.update_status_text();
+                            }
                             Err(e) => {
                                 app.error = Some(e);
                                 app.detail_status = "Error fetching status".to_string();
+                                app.update_status_text();
                             }
                         }
                         refresh_detail_content(app, false).await;
@@ -139,10 +143,14 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
                     tokio::join!(fetch_timer_status(&unit), fetch_timer_logs(&activates));
 
                 match status_res {
-                    Ok(status) => app.detail_status = status,
+                    Ok(status) => {
+                        app.detail_status = status;
+                        app.update_status_text();
+                    }
                     Err(e) => {
                         app.error = Some(e);
                         app.detail_status = "Error fetching status".to_string();
+                        app.update_status_text();
                     }
                 }
                 match logs_res {
