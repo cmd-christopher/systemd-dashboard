@@ -386,6 +386,105 @@ mod tests {
         }).unwrap();
     }
 
+    #[test]
+    fn test_draw_detail_logs_mode() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "tomorrow".into(),
+            last_abs: "yesterday".into(),
+            next_rel: "1d".into(),
+            last_rel: "1d".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::Logs;
+        app.detail_logs = "Sample log output\nLine 2".into();
+
+        terminal.draw(|f| {
+            draw_detail(f, &mut app, f.size());
+        }).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("test.timer"));
+        assert!(content.contains("Bottom Pane: Logs"));
+        assert!(content.contains("Sample log output"));
+    }
+
+    #[test]
+    fn test_draw_detail_service_file_mode() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        app.detail_logs = "[Unit]\nDescription=Test".into();
+
+        terminal.draw(|f| {
+            draw_detail(f, &mut app, f.size());
+        }).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Bottom Pane: Service File"));
+        assert!(content.contains("Description=Test"));
+    }
+
+    #[test]
+    fn test_draw_detail_empty_timer() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+
+        app.enter_detail();
+
+        terminal.draw(|f| {
+            draw_detail(f, &mut app, f.size());
+        }).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Unknown"));
+    }
 
     #[test]
     fn test_count_visual_lines_zero_width() {
