@@ -23,6 +23,7 @@ pub struct App {
     pub mode: ViewMode,
     pub selected_index: usize,
     pub detail_status: String,
+    pub detail_status_text: String,
     pub detail_logs: String,
     pub detail_focus: DetailPaneFocus,
     pub detail_content_mode: DetailContentMode,
@@ -33,12 +34,32 @@ pub struct App {
 }
 
 impl App {
+    pub fn update_status_text(&mut self) {
+        self.detail_status_text = if let Some(t) = self.selected_timer() {
+            format!(
+                "Unit: {}\nService: {}\nSchedule: {}\n\nLast Run: {} ({})\nNext Run: {} ({})\nStatus: {}\n\n{}",
+                t.unit,
+                t.activates,
+                t.schedule,
+                t.last_abs,
+                t.last_rel,
+                t.next_abs,
+                t.next_rel,
+                t.status,
+                self.detail_status
+            )
+        } else {
+            self.detail_status.clone()
+        };
+    }
+
     pub fn new() -> App {
         App {
             timers: Vec::new(),
             mode: ViewMode::List,
             selected_index: 0,
             detail_status: String::new(),
+            detail_status_text: String::new(),
             detail_logs: String::new(),
             detail_focus: DetailPaneFocus::Top,
             detail_content_mode: DetailContentMode::Logs,
@@ -58,6 +79,7 @@ impl App {
             _ => self.selected_index + 1,
         };
         self.selected_index = i;
+        self.update_status_text();
     }
 
     pub fn previous(&mut self) {
@@ -69,6 +91,7 @@ impl App {
             _ => self.selected_index - 1,
         };
         self.selected_index = i;
+        self.update_status_text();
     }
 
     pub fn enter_detail(&mut self) {
@@ -149,6 +172,7 @@ impl App {
             // No timer was selected before, clamp to valid range
             self.selected_index = self.selected_index.min(self.timers.len() - 1);
         }
+        self.update_status_text();
     }
 }
 

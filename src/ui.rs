@@ -192,22 +192,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     let (controls_prefix, controls_suffix) = DETAIL_CONTROLS_TITLE
         .split_once("Logs | Service File")
         .unwrap_or(("Detail Controls [", "]"));
-    let status_text = if let Some(t) = app.selected_timer() {
-        format!(
-            "Unit: {}\nService: {}\nSchedule: {}\n\nLast Run: {} ({})\nNext Run: {} ({})\nStatus: {}\n\n{}",
-            t.unit,
-            t.activates,
-            t.schedule,
-            t.last_abs,
-            t.last_rel,
-            t.next_abs,
-            t.next_rel,
-            t.status,
-            app.detail_status
-        )
-    } else {
-        app.detail_status.as_str().into()
-    };
+    let status_text = app.detail_status_text.as_str();
 
     let status_block = Block::default()
         .borders(Borders::ALL)
