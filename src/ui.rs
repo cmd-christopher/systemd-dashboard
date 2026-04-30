@@ -159,6 +159,19 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     state.select(Some(app.selected_index));
 
     f.render_stateful_widget(t, area, &mut state);
+
+    let mut scrollbar_state =
+        ScrollbarState::new(app.timers.len().saturating_sub(1)).position(app.selected_index);
+    f.render_stateful_widget(
+        Scrollbar::new(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(Some("↑"))
+            .end_symbol(Some("↓")),
+        area.inner(&ratatui::layout::Margin {
+            vertical: 1,
+            horizontal: 0,
+        }),
+        &mut scrollbar_state,
+    );
 }
 
 fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
@@ -336,8 +349,8 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ratatui::{backend::TestBackend, Terminal};
     use crate::systemd::TimerInfo;
+    use ratatui::{Terminal, backend::TestBackend};
 
     #[test]
     fn test_draw_list_empty() {
@@ -345,9 +358,11 @@ mod tests {
         let mut terminal = Terminal::new(backend).unwrap();
         let mut app = App::new();
 
-        terminal.draw(|f| {
-            draw_list(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
     }
 
     #[test]
@@ -366,9 +381,11 @@ mod tests {
             schedule: "daily".into(),
         });
 
-        terminal.draw(|f| {
-            draw_list(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
     }
 
     #[test]
@@ -390,9 +407,11 @@ mod tests {
         app.detail_content_mode = DetailContentMode::Logs;
         app.detail_logs = "Sample log output\nLine 2".into();
 
-        terminal.draw(|f| {
-            draw_detail(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
 
         let buffer = terminal.backend().buffer();
         let content = (0..buffer.area.height)
@@ -428,9 +447,11 @@ mod tests {
         app.detail_content_mode = DetailContentMode::ServiceFile;
         app.detail_logs = "[Unit]\nDescription=Test".into();
 
-        terminal.draw(|f| {
-            draw_detail(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
 
         let buffer = terminal.backend().buffer();
         let content = (0..buffer.area.height)
@@ -454,9 +475,11 @@ mod tests {
 
         app.enter_detail();
 
-        terminal.draw(|f| {
-            draw_detail(f, &mut app, f.size());
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
 
         let buffer = terminal.backend().buffer();
         let content = (0..buffer.area.height)
@@ -538,9 +561,11 @@ mod tests {
         let mut terminal = Terminal::new(backend).unwrap();
         let mut app = App::new();
 
-        terminal.draw(|f| {
-            draw_ui(f, &mut app);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_ui(f, &mut app);
+            })
+            .unwrap();
 
         let buffer = terminal.backend().buffer();
         let content = (0..buffer.area.height)
@@ -562,9 +587,11 @@ mod tests {
         let mut app = App::new();
         app.enter_detail();
 
-        terminal.draw(|f| {
-            draw_ui(f, &mut app);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_ui(f, &mut app);
+            })
+            .unwrap();
 
         let buffer = terminal.backend().buffer();
         let content = (0..buffer.area.height)
@@ -586,9 +613,11 @@ mod tests {
         let mut app = App::new();
         app.error = Some("Test Error Message".into());
 
-        terminal.draw(|f| {
-            draw_ui(f, &mut app);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                draw_ui(f, &mut app);
+            })
+            .unwrap();
 
         let buffer = terminal.backend().buffer();
         let content = (0..buffer.area.height)

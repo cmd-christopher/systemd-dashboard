@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_format(c: &mut Criterion) {
     let t_unit = "sysstat-collect.timer";
@@ -32,7 +32,15 @@ fn bench_format(c: &mut Criterion) {
     // Simulate cache hit
     let cached_s = format!(
         "Unit: {}\nService: {}\nSchedule: {}\n\nLast Run: {} ({})\nNext Run: {} ({})\nStatus: {}\n\n{}",
-        t_unit, t_activates, t_schedule, t_last_abs, t_last_rel, t_next_abs, t_next_rel, t_status, detail_status
+        t_unit,
+        t_activates,
+        t_schedule,
+        t_last_abs,
+        t_last_rel,
+        t_next_abs,
+        t_next_rel,
+        t_status,
+        detail_status
     );
 
     c.bench_function("cached_status_text", |b| {
