@@ -71,21 +71,21 @@ async fn run_app<B: ratatui::backend::Backend>(
             .checked_sub(last_tick.elapsed())
             .unwrap_or_else(|| Duration::from_secs(0));
 
-        if event::poll(timeout)? {
-            if let Event::Key(key) = event::read()? {
-                if app.error.is_some() {
-                    app.error = None;
-                }
-                match app.mode {
-                    ViewMode::List => {
-                        if handle_list_input(app, key.code).await {
-                            return Ok(());
-                        }
+        if event::poll(timeout)?
+            && let Event::Key(key) = event::read()?
+        {
+            if app.error.is_some() {
+                app.error = None;
+            }
+            match app.mode {
+                ViewMode::List => {
+                    if handle_list_input(app, key.code).await {
+                        return Ok(());
                     }
-                    ViewMode::Detail => {
-                        if handle_detail_input(app, key.code).await {
-                            return Ok(());
-                        }
+                }
+                ViewMode::Detail => {
+                    if handle_detail_input(app, key.code).await {
+                        return Ok(());
                     }
                 }
             }

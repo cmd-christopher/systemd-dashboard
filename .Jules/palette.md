@@ -10,3 +10,6 @@
 ## 2025-05-15 - Added visual scrollbar to log and service file views
 **Learning:** Terminal UIs showing scrollable content like logs or service files should provide a visual cue when the content overflows the view area. This acts as an affordance, helping users immediately understand that there is more content to explore and roughly how much.
 **Action:** When creating text views with scrolling functionality, append a `Scrollbar` from Ratatui to the view. Make sure to render it after the main text widget, bound to the same `Rect`, to correctly position it.
+## 2025-05-16 - Added visual scrollbar to list views
+**Learning:** Terminal UIs showing list content like a table of items should provide a visual cue when the content overflows the view area. This acts as an affordance, helping users immediately understand that there is more content to explore and roughly how much.
+**Action:** When creating list views with scrolling functionality, append a `Scrollbar` from Ratatui to the view. Make sure to render it after the main widget, bound to the same `Rect`, to correctly position it.
