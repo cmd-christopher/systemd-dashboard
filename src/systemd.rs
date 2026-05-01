@@ -292,14 +292,15 @@ fn dedupe_schedule_values(values: Vec<String>) -> String {
     let mut seen = std::collections::HashSet::new();
 
     for value in values {
-        let value = value.trim().to_string();
-        if value.is_empty() {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
             continue;
         }
 
-        if !seen.contains(&value) {
-            seen.insert(value.clone());
-            deduped.push(value);
+        if !seen.contains(trimmed) {
+            let s = trimmed.to_string();
+            seen.insert(s.clone());
+            deduped.push(s);
         }
     }
 
