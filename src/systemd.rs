@@ -303,7 +303,12 @@ pub async fn fetch_timer_status(timer_unit: &str) -> Result<String, String> {
 
 pub async fn fetch_timer_logs(service_unit: &str) -> Result<String, String> {
     let output = Command::new("journalctl")
-        .args(&["--user", "-u", service_unit, "-n", "50", "--no-pager"])
+        .arg("--user")
+        .arg("-n")
+        .arg("50")
+        .arg("--no-pager")
+        .arg("--")
+        .arg(format!("_SYSTEMD_UNIT={}", service_unit))
         .output()
         .await;
 
