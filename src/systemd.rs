@@ -367,7 +367,8 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        extract_timer_schedules, format_time_abs, format_time_rel, normalize_service_file_output,
+        dedupe_schedule_values, extract_timer_schedules, format_time_abs, format_time_rel,
+        normalize_service_file_output,
     };
 
     #[test]
@@ -516,6 +517,40 @@ mod tests {
         assert_eq!(
             format_time_rel(Some(now - (1 * 86400 + 5 * 3600) * 1_000_000), now, false),
             "1d ago"
+        );
+    }
+
+    #[test]
+    fn test_dedupe_schedule_values() {
+        // Empty input
+        assert_eq!(dedupe_schedule_values(vec![]), "n/a");
+
+        // Input with only empty strings or whitespace
+        assert_eq!(
+            dedupe_schedule_values(vec!["".to_string(), "  ".to_string()]),
+            "n/a"
+        );
+
+        // Input with unique values
+        assert_eq!(
+            dedupe_schedule_values(vec!["A".to_string(), "B".to_string()]),
+            "A, B"
+        );
+
+        // Input with duplicates
+        assert_eq!(
+            dedupe_schedule_values(vec!["A".to_string(), "A".to_string()]),
+            "A"
+        );
+
+        // Input with mixed duplicates and whitespace
+        assert_eq!(
+            dedupe_schedule_values(vec![
+                " A ".to_string(),
+                "A".to_string(),
+                "B ".to_string()
+            ]),
+            "A, B"
         );
     }
 }
