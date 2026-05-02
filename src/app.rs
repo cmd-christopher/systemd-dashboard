@@ -195,6 +195,39 @@ mod tests {
     }
 
     #[test]
+    fn update_status_text_with_selected_timer() {
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "alpha.timer".into(),
+            activates: "alpha.service".into(),
+            next_abs: "2024-01-02".into(),
+            last_abs: "2024-01-01".into(),
+            next_rel: "tomorrow".into(),
+            last_rel: "yesterday".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.selected_index = 0;
+        app.detail_status = "General Status".into();
+
+        app.update_status_text();
+
+        let expected = "Unit: alpha.timer\nService: alpha.service\nSchedule: daily\n\nLast Run: 2024-01-01 (yesterday)\nNext Run: 2024-01-02 (tomorrow)\nStatus: Active\n\nGeneral Status";
+        assert_eq!(app.detail_status_text, expected);
+    }
+
+    #[test]
+    fn update_status_text_without_selected_timer() {
+        let mut app = App::new();
+        app.selected_index = 0;
+        app.detail_status = "General Status".into();
+
+        app.update_status_text();
+
+        assert_eq!(app.detail_status_text, "General Status");
+    }
+
+    #[test]
     fn next_with_empty_timers_does_nothing() {
         let mut app = App::new();
         app.next();
