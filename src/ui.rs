@@ -673,6 +673,96 @@ mod tests {
     }
 
     #[test]
+    fn test_draw_footer_list_mode() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.mode = ViewMode::List;
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Quit"));
+        assert!(content.contains("Navigate"));
+        assert!(content.contains("Details"));
+        assert!(content.contains("Toggle Timer"));
+        assert!(content.contains("│")); // separator
+    }
+
+    #[test]
+    fn test_draw_footer_detail_top_focus() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.mode = ViewMode::Detail;
+        app.detail_focus = DetailPaneFocus::Top;
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Quit"));
+        assert!(content.contains("Back"));
+        assert!(content.contains("Focus Bottom"));
+        assert!(content.contains("Switch Mode"));
+    }
+
+    #[test]
+    fn test_draw_footer_detail_bottom_focus() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.mode = ViewMode::Detail;
+        app.detail_focus = DetailPaneFocus::Bottom;
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Quit"));
+        assert!(content.contains("Back"));
+        assert!(content.contains("Focus Top"));
+        assert!(content.contains("Scroll"));
+    }
+
+    #[test]
     fn test_centered_rect() {
         let parent = Rect::new(0, 0, 100, 100);
 
