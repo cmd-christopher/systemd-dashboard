@@ -667,4 +667,23 @@ mod tests {
         assert!(content.contains("Error (Press any key to dismiss)"));
         assert!(content.contains("Test Error Message"));
     }
+
+    #[test]
+    fn test_centered_rect() {
+        let parent = Rect::new(0, 0, 100, 100);
+
+        // 50% width and height
+        let child = centered_rect(50, 50, parent);
+        assert_eq!(child, Rect::new(25, 25, 50, 50));
+
+        // 80% width, 20% height
+        let child2 = centered_rect(80, 20, parent);
+        assert_eq!(child2, Rect::new(10, 40, 80, 20));
+
+        let parent2 = Rect::new(0, 0, 200, 100);
+
+        // 50% width and height on wider parent
+        let child3 = centered_rect(50, 50, parent2);
+        assert_eq!(child3, Rect::new(50, 25, 100, 50));
+    }
 }
