@@ -13,3 +13,6 @@
 ## 2025-05-16 - Added visual scrollbar to list views
 **Learning:** Terminal UIs showing list content like a table of items should provide a visual cue when the content overflows the view area. This acts as an affordance, helping users immediately understand that there is more content to explore and roughly how much.
 **Action:** When creating list views with scrolling functionality, append a `Scrollbar` from Ratatui to the view. Make sure to render it after the main widget, bound to the same `Rect`, to correctly position it.
+## 2025-05-17 - Styled visual pills for keybindings
+**Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps using styled visual pills (separating the key command with a highlighted background from the action description) improves clarity, aesthetics, and user guidance dynamically based on the current view mode.
+**Action:** When implementing keybindings footers, use separate styles for keys and descriptions to create visual pills, making it easier for users to quickly scan and understand available actions.

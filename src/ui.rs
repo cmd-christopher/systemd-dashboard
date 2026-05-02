@@ -325,22 +325,44 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
 }
 
 fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
-    let keybindings = match app.mode {
-        ViewMode::List => {
-            "q: Quit | j/k or \u{2191}/\u{2193}: Navigate | Enter: Detail | Space: Toggle"
-        }
+    let bindings = match app.mode {
+        ViewMode::List => vec![
+            ("q", "Quit"),
+            ("\u{2191}\u{2193}/j/k", "Navigate"),
+            ("Enter", "Details"),
+            ("Space", "Toggle Timer"),
+        ],
         ViewMode::Detail => match app.detail_focus {
-            DetailPaneFocus::Top => {
-                "q: Quit | Esc/Backspace: Back | Tab: Focus Bottom | Arrows: Switch Mode"
-            }
-            DetailPaneFocus::Bottom => {
-                "q: Quit | Esc/Backspace: Back | Tab: Focus Top | Arrows or j/k: Scroll"
-            }
+            DetailPaneFocus::Top => vec![
+                ("q", "Quit"),
+                ("Esc", "Back"),
+                ("Tab", "Focus Bottom"),
+                ("\u{2190}\u{2192}", "Switch Mode"),
+            ],
+            DetailPaneFocus::Bottom => vec![
+                ("q", "Quit"),
+                ("Esc", "Back"),
+                ("Tab", "Focus Top"),
+                ("\u{2191}\u{2193}/j/k", "Scroll"),
+            ],
         },
     };
 
-    let footer = Paragraph::new(keybindings)
-        .style(Style::default().fg(Color::White).bg(Color::DarkGray))
+    let mut spans = Vec::new();
+    let key_style = Style::default().fg(Color::Black).bg(Color::Gray).add_modifier(Modifier::BOLD);
+    let desc_style = Style::default().fg(Color::White);
+    let sep_style = Style::default().fg(Color::DarkGray);
+
+    for (i, (key, desc)) in bindings.iter().enumerate() {
+        spans.push(Span::styled(format!(" {} ", key), key_style));
+        spans.push(Span::styled(format!(" {} ", desc), desc_style));
+        if i < bindings.len() - 1 {
+            spans.push(Span::styled("│ ", sep_style));
+        }
+    }
+
+    let footer = Paragraph::new(Line::from(spans))
+        .style(Style::default().bg(Color::DarkGray))
         .alignment(ratatui::layout::Alignment::Center);
 
     f.render_widget(footer, area);
