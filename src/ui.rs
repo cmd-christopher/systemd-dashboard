@@ -29,7 +29,11 @@ fn count_visual_lines(text: &str, max_width: u16) -> usize {
         let words = line.split_inclusive(' ');
 
         for word in words {
-            let word_len = word.chars().count();
+            let word_len = if word.is_ascii() {
+                word.len()
+            } else {
+                word.chars().count()
+            };
 
             if line_width + word_len > max_width {
                 if line_width > 0 {
