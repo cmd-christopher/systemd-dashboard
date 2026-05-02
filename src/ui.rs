@@ -207,6 +207,11 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .unwrap_or(("Detail Controls [", "]"));
     let status_text = app.detail_status_text.as_str();
 
+    let top_prefix = if top_active {
+        " ▶ Status: "
+    } else {
+        " Status: "
+    };
     let status_block = Block::default()
         .borders(Borders::ALL)
         .border_style(if top_active {
@@ -215,7 +220,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             inactive_border
         })
         .title(Line::from(vec![
-            Span::raw(" Status: "),
+            Span::raw(top_prefix),
             Span::styled(timer, Style::default().add_modifier(Modifier::BOLD)),
             Span::raw(" "),
         ]))
@@ -231,21 +236,26 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .wrap(Wrap { trim: true });
     f.render_widget(status_para, chunks[0]);
 
+    let bottom_prefix = if bottom_active {
+        " ▶ Bottom Pane: "
+    } else {
+        " Bottom Pane: "
+    };
     let bottom_title = match app.detail_content_mode {
         DetailContentMode::Logs => {
             if app.auto_scroll {
                 Line::from(vec![
-                    Span::raw(" Bottom Pane: Logs "),
+                    Span::raw(format!("{}Logs ", bottom_prefix)),
                     Span::styled("[Auto-scroll: On] ", Style::default().fg(Color::Green)),
                 ])
             } else {
                 Line::from(vec![
-                    Span::raw(" Bottom Pane: Logs "),
+                    Span::raw(format!("{}Logs ", bottom_prefix)),
                     Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::DarkGray)),
                 ])
             }
         }
-        DetailContentMode::ServiceFile => Line::from(" Bottom Pane: Service File "),
+        DetailContentMode::ServiceFile => Line::from(format!("{}Service File ", bottom_prefix)),
     };
     let logs_block = Block::default()
         .borders(Borders::ALL)
@@ -349,7 +359,10 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let mut spans = Vec::new();
-    let key_style = Style::default().fg(Color::Black).bg(Color::Gray).add_modifier(Modifier::BOLD);
+    let key_style = Style::default()
+        .fg(Color::Black)
+        .bg(Color::Gray)
+        .add_modifier(Modifier::BOLD);
     let desc_style = Style::default().fg(Color::White);
     let sep_style = Style::default().fg(Color::DarkGray);
 
