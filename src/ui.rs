@@ -405,6 +405,32 @@ mod tests {
     }
 
     #[test]
+    fn test_draw_error() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let error_msg = "Critical failure";
+
+        terminal
+            .draw(|f| {
+                draw_error(f, error_msg, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Error (Press any key to dismiss)"));
+        assert!(content.contains(error_msg));
+    }
+
+    #[test]
     fn test_draw_list_with_items() {
         let backend = TestBackend::new(80, 24);
         let mut terminal = Terminal::new(backend).unwrap();
