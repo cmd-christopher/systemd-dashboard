@@ -38,20 +38,11 @@ fn count_visual_lines(text: &str, max_width: u16) -> usize {
             if line_width + word_len > max_width {
                 if line_width > 0 {
                     total_lines += 1;
-                    line_width = 0;
                 }
 
                 if word_len > max_width {
-                    let full_lines = word_len / max_width;
-                    let remainder = word_len % max_width;
-                    if remainder == 0 {
-                        total_lines += full_lines;
-                        // Avoid unused assignment warning; line_width is naturally 0 here,
-                        // but setting it triggers unused_assignment if it's the last token of the line
-                    } else {
-                        total_lines += full_lines;
-                        line_width = remainder;
-                    }
+                    total_lines += word_len / max_width;
+                    line_width = word_len % max_width;
                 } else {
                     line_width = word_len;
                 }
