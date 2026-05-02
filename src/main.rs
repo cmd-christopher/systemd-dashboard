@@ -135,13 +135,16 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
         KeyCode::Down | KeyCode::Char('j') => app.next(),
         KeyCode::Up | KeyCode::Char('k') => app.previous(),
         KeyCode::Enter => {
-            if let Some(timer) = app.selected_timer() {
-                let unit = timer.unit.clone();
-                let activates = timer.activates.clone();
+            let fetch_results = if let Some(timer) = app.selected_timer() {
+                Some(tokio::join!(
+                    fetch_timer_status(&timer.unit),
+                    fetch_timer_logs(&timer.activates)
+                ))
+            } else {
+                None
+            };
 
-                let (status_res, logs_res) =
-                    tokio::join!(fetch_timer_status(&unit), fetch_timer_logs(&activates));
-
+            if let Some((status_res, logs_res)) = fetch_results {
                 match status_res {
                     Ok(status) => {
                         app.detail_status = status;
@@ -165,11 +168,15 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
             }
         }
         KeyCode::Char(' ') => {
-            if let Some(timer) = app.selected_timer() {
-                let unit = timer.unit.clone();
+            let toggle_op = if let Some(timer) = app.selected_timer() {
                 let is_active = timer.status == "Active" || timer.status == "Waiting";
+                Some(crate::systemd::toggle_timer(&timer.unit, !is_active).await)
+            } else {
+                None
+            };
 
-                match crate::systemd::toggle_timer(&unit, !is_active).await {
+            if let Some(result) = toggle_op {
+                match result {
                     Ok(_) => {
                         app.error = None;
                         match fetch_timers().await {
