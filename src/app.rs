@@ -300,6 +300,33 @@ mod tests {
     }
 
     #[test]
+    fn exit_detail_resets_state() {
+        let mut app = App::new();
+
+        // Simulate being in detail view with non-default state
+        app.mode = super::ViewMode::Detail;
+        app.detail_status = "some text".into();
+        app.detail_logs = "log line".into();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        app.detail_scroll = 5;
+        app.detail_max_scroll = 10;
+        app.auto_scroll = false;
+
+        app.exit_detail();
+
+        // Assert everything is reset to defaults for list view
+        assert!(matches!(app.mode, super::ViewMode::List));
+        assert!(app.detail_status.is_empty());
+        assert!(app.detail_logs.is_empty());
+        assert_eq!(app.detail_focus, DetailPaneFocus::Top);
+        assert_eq!(app.detail_content_mode, DetailContentMode::Logs);
+        assert_eq!(app.detail_scroll, 0);
+        assert_eq!(app.detail_max_scroll, 0);
+        assert!(app.auto_scroll);
+    }
+
+    #[test]
     fn detail_focus_toggles_between_panes() {
         let mut app = App::new();
 
