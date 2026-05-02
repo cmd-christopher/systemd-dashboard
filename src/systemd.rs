@@ -389,8 +389,8 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        RawTimerInfo, extract_timer_metadata, format_time_abs, format_time_rel,
-        normalize_service_file_output,
+        RawTimerInfo, dedupe_schedule_values, extract_timer_metadata, format_time_abs,
+        format_time_rel, normalize_service_file_output,
     };
 
     #[test]
@@ -499,5 +499,69 @@ mod tests {
         let raw: RawTimerInfo = serde_json::from_str(json).unwrap();
         assert_eq!(raw.unit, "cece-auth-check.timer");
         assert_eq!(raw.activates, None);
+    }
+
+    #[test]
+    fn test_dedupe_schedule_values() {
+        // Empty list
+        assert_eq!(dedupe_schedule_values(vec![]), "n/a");
+
+        // Single value
+        assert_eq!(
+            dedupe_schedule_values(vec!["*-*-* 04:00:00".to_string()]),
+            "*-*-* 04:00:00"
+        );
+
+        // Multiple unique values
+        assert_eq!(
+            dedupe_schedule_values(vec![
+                "*-*-* 04:00:00".to_string(),
+                "OnBootSec=5min".to_string()
+            ]),
+            "*-*-* 04:00:00, OnBootSec=5min"
+        );
+
+        // Duplicate values
+        assert_eq!(
+            dedupe_schedule_values(vec![
+                "*-*-* 04:00:00".to_string(),
+                "*-*-* 04:00:00".to_string(),
+                "OnBootSec=5min".to_string(),
+                "OnBootSec=5min".to_string()
+            ]),
+            "*-*-* 04:00:00, OnBootSec=5min"
+        );
+
+        // Values with whitespace
+        assert_eq!(
+            dedupe_schedule_values(vec![
+                "  *-*-* 04:00:00  ".to_string(),
+                "OnBootSec=5min\n".to_string()
+            ]),
+            "*-*-* 04:00:00, OnBootSec=5min"
+        );
+
+        // Empty and blank string values
+        assert_eq!(
+            dedupe_schedule_values(vec![
+                "".to_string(),
+                "   ".to_string(),
+                "*-*-* 04:00:00".to_string()
+            ]),
+            "*-*-* 04:00:00"
+        );
+
+        // Mixed case with duplicates and whitespace
+        assert_eq!(
+            dedupe_schedule_values(vec![
+                "   ".to_string(),
+                "OnBootSec=5min".to_string(),
+                "  OnBootSec=5min  ".to_string(),
+                "".to_string(),
+                "*-*-* 04:00:00".to_string(),
+                " *-*-* 04:00:00 ".to_string()
+            ]),
+            "OnBootSec=5min, *-*-* 04:00:00"
+        );
     }
 }
