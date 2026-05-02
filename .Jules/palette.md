@@ -16,3 +16,6 @@
 ## 2025-05-17 - Styled visual pills for keybindings
 **Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps using styled visual pills (separating the key command with a highlighted background from the action description) improves clarity, aesthetics, and user guidance dynamically based on the current view mode.
 **Action:** When implementing keybindings footers, use separate styles for keys and descriptions to create visual pills, making it easier for users to quickly scan and understand available actions.
+## 2026-05-02 - Textual focus indicators in TUI
+**Learning:** Relying solely on color changes (like border colors) to indicate focus violates accessibility guidelines and can be hard to see. Adding a textual indicator like '▶' improves visibility.
+**Action:** Always provide a non-color visual indicator for focus states in terminal interfaces.
