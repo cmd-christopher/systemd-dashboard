@@ -99,7 +99,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
             "Active" => Cell::from("✔ Active").style(Style::default().fg(Color::Green)),
             "Waiting" => Cell::from("⏳ Waiting").style(Style::default().fg(Color::DarkGray)),
             "Inactive" => Cell::from("⏸ Inactive").style(Style::default().fg(Color::Gray)),
-            _ => Cell::from(item.status.as_str()).style(Style::default().fg(Color::Red)),
+            _ => Cell::from(format!("⚠ {}", item.status)).style(Style::default().fg(Color::Red)),
         };
 
         let cells = vec![
@@ -202,6 +202,17 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .unwrap_or(("Detail Controls [", "]"));
     let status_text = app.detail_status_text.as_str();
 
+    let logs_label = if matches!(app.detail_content_mode, DetailContentMode::Logs) {
+        "▶ Logs"
+    } else {
+        "  Logs"
+    };
+    let service_file_label = if matches!(app.detail_content_mode, DetailContentMode::ServiceFile) {
+        "▶ Service File"
+    } else {
+        "  Service File"
+    };
+
     let top_prefix = if top_active {
         " ▶ Status: "
     } else {
@@ -221,9 +232,9 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         ]))
         .title(Line::from(vec![
             Span::raw(controls_prefix),
-            Span::styled("Logs", logs_style),
+            Span::styled(logs_label, logs_style),
             Span::raw(" | "),
-            Span::styled("Service File", service_file_style),
+            Span::styled(service_file_label, service_file_style),
             Span::raw(controls_suffix),
         ]));
     let status_para = Paragraph::new(status_text)
