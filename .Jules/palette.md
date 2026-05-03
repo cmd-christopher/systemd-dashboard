@@ -19,3 +19,7 @@
 ## 2026-05-02 - Textual focus indicators in TUI
 **Learning:** Relying solely on color changes (like border colors) to indicate focus violates accessibility guidelines and can be hard to see. Adding a textual indicator like '▶' improves visibility.
 **Action:** Always provide a non-color visual indicator for focus states in terminal interfaces.
+
+## 2025-02-18 - Non-Color Affordances in TUI Navigation
+**Learning:** TUI tab indicators (like the Detail Controls: Logs vs Service File) that rely solely on color and font weight (bold) to show the active state are inaccessible, similar to web elements.
+**Action:** Added a `▶ ` textual symbol prefix to clearly denote the active tab option independently of terminal color support.
