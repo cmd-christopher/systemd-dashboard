@@ -148,7 +148,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
             .title(" Systemd Timers "),
     )
     .highlight_style(selected_style)
-    .highlight_symbol(">> ");
+    .highlight_symbol("▶  ");
 
     let mut state = TableState::default();
     state.select(Some(app.selected_index));
