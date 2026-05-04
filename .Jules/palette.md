@@ -23,3 +23,6 @@
 ## 2025-02-18 - Non-Color Affordances in TUI Navigation
 **Learning:** TUI tab indicators (like the Detail Controls: Logs vs Service File) that rely solely on color and font weight (bold) to show the active state are inaccessible, similar to web elements.
 **Action:** Added a `▶ ` textual symbol prefix to clearly denote the active tab option independently of terminal color support.
+## 2025-05-18 - Consistent symbol indicators
+**Learning:** Terminal UIs relying on text symbols should maintain consistency across views. Mixing indicator styles like `>> ` for selection and `▶ ` for focus creates a visually disjointed experience. Standardizing symbols (e.g., using `▶ ` universally) improves visual polish with minimal code changes.
+**Action:** When adding or modifying selection or focus indicators, audit existing symbols in the application to ensure visual consistency.
