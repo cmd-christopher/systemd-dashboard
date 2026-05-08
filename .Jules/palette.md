@@ -26,3 +26,7 @@
 ## 2025-05-18 - Consistent symbol indicators
 **Learning:** Terminal UIs relying on text symbols should maintain consistency across views. Mixing indicator styles like `>> ` for selection and `▶ ` for focus creates a visually disjointed experience. Standardizing symbols (e.g., using `▶ ` universally) improves visual polish with minimal code changes.
 **Action:** When adding or modifying selection or focus indicators, audit existing symbols in the application to ensure visual consistency.
+
+## 2026-05-08 - Table row highlight styling
+**Learning:** Using `Modifier::REVERSED` as a row highlight style in TUI `Table` widgets swaps foreground and background colors. If individual cells have distinct foreground colors, this creates an inconsistent "rainbow" background effect when the row is selected.
+**Action:** When styling selected table rows, use a solid background color (e.g., `Style::default().bg(Color::DarkGray)`) rather than `Modifier::REVERSED` to maintain a consistent background and avoid the rainbow effect.
