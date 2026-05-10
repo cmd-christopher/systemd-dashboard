@@ -26,3 +26,7 @@
 ## 2025-05-18 - Consistent symbol indicators
 **Learning:** Terminal UIs relying on text symbols should maintain consistency across views. Mixing indicator styles like `>> ` for selection and `▶ ` for focus creates a visually disjointed experience. Standardizing symbols (e.g., using `▶ ` universally) improves visual polish with minimal code changes.
 **Action:** When adding or modifying selection or focus indicators, audit existing symbols in the application to ensure visual consistency.
+
+## 2026-05-10 - Table Selection Highlight Accessibility
+**Learning:** Using Modifier::REVERSED for table row highlights when cells have distinct foreground colors creates an inconsistent 'rainbow' background effect that can reduce readability and fail accessibility contrast checks.
+**Action:** Use a solid background color with a modifier (like .bg(Color::DarkGray).add_modifier(Modifier::BOLD)) to preserve foreground colors while clearly indicating selection.
