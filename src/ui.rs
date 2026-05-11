@@ -78,7 +78,9 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
 }
 
 fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
-    let selected_style = Style::default().bg(Color::DarkGray);
+    let selected_style = Style::default()
+        .bg(Color::DarkGray)
+        .add_modifier(Modifier::BOLD);
     let normal_style = Style::default().bg(Color::Blue);
     let header_cells = ["Unit", "Schedule", "Last Run", "Next Run", "Status"]
         .iter()

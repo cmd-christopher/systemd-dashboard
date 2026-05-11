@@ -29,3 +29,9 @@
 ## 2025-05-19 - Inconsistent 'rainbow' background effect with Modifier::REVERSED
 **Learning:** Using `Modifier::REVERSED` as a row highlight style in TUI `Table` widgets swaps the foreground and background colors. If individual cells within a row have distinct foreground colors, this creates an inconsistent 'rainbow' background effect, which can be visually jarring and reduce readability.
 **Action:** Avoid using `Modifier::REVERSED` for highlighting rows where cells have varying foreground colors. Instead, explicitly set a solid background color (e.g., `Style::default().bg(Color::DarkGray)`) to ensure a consistent and clean highlight state.
+## 2025-05-18 - Consistent symbol indicators
+**Learning:** Terminal UIs relying on text symbols should maintain consistency across views. Mixing indicator styles like `>> ` for selection and `▶ ` for focus creates a visually disjointed experience. Standardizing symbols (e.g., using `▶ ` universally) improves visual polish with minimal code changes.
+**Action:** When adding or modifying selection or focus indicators, audit existing symbols in the application to ensure visual consistency.
+## 2025-05-18 - Improve Table Row Selection Visibility
+**Learning:** Adding a subtle bold modifier to the selected row in TUI tables helps visually distinguish the selected row without introducing inconsistent 'rainbow' background effects often caused by `Modifier::REVERSED` on multi-colored text.
+**Action:** When styling selected table rows, prefer using a solid background color paired with `Modifier::BOLD` rather than reversed colors.
