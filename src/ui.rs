@@ -371,20 +371,17 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
         .fg(Color::Black)
         .bg(Color::Gray)
         .add_modifier(Modifier::BOLD);
-    let desc_style = Style::default().fg(Color::White);
-    let sep_style = Style::default().fg(Color::DarkGray);
+    let desc_style = Style::default().fg(Color::White).bg(Color::DarkGray);
 
     for (i, (key, desc)) in bindings.iter().enumerate() {
         spans.push(Span::styled(format!(" {} ", key), key_style));
         spans.push(Span::styled(format!(" {} ", desc), desc_style));
         if i < bindings.len() - 1 {
-            spans.push(Span::styled("│ ", sep_style));
+            spans.push(Span::raw("  "));
         }
     }
 
-    let footer = Paragraph::new(Line::from(spans))
-        .style(Style::default().bg(Color::DarkGray))
-        .alignment(ratatui::layout::Alignment::Center);
+    let footer = Paragraph::new(Line::from(spans)).alignment(ratatui::layout::Alignment::Center);
 
     f.render_widget(footer, area);
 }
@@ -729,7 +726,6 @@ mod tests {
         assert!(content.contains("Navigate"));
         assert!(content.contains("Details"));
         assert!(content.contains("Toggle Timer"));
-        assert!(content.contains("│")); // separator
     }
 
     #[test]
