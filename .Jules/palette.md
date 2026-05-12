@@ -35,3 +35,7 @@
 ## 2025-05-18 - Improve Table Row Selection Visibility
 **Learning:** Adding a subtle bold modifier to the selected row in TUI tables helps visually distinguish the selected row without introducing inconsistent 'rainbow' background effects often caused by `Modifier::REVERSED` on multi-colored text.
 **Action:** When styling selected table rows, prefer using a solid background color paired with `Modifier::BOLD` rather than reversed colors.
+
+## 2025-05-20 - Styling Keybindings as Visual Pills
+**Learning:** In a terminal UI, styling the key and its description together as a single visual element (a "pill") by bridging their background colors instead of using simple text separators significantly improves scannability and visual hierarchy in the footer.
+**Action:** When creating keybinding footers, remove the background color from the parent container and instead apply background colors directly to the key and description parts. Use simple spacing between these combined elements instead of line separators like `│` to make them look like individual UI components.
