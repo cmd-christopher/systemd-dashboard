@@ -343,12 +343,22 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
 }
 
 fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
+    let toggle_desc = if let Some(timer) = app.selected_timer() {
+        if timer.status == "Active" || timer.status == "Waiting" {
+            "Stop Timer"
+        } else {
+            "Start Timer"
+        }
+    } else {
+        "Toggle Timer"
+    };
+
     let bindings = match app.mode {
         ViewMode::List => vec![
             ("q", "Quit"),
             ("\u{2191}\u{2193}/j/k", "Navigate"),
             ("Enter", "Details"),
-            ("Space", "Toggle Timer"),
+            ("Space", toggle_desc),
         ],
         ViewMode::Detail => match app.detail_focus {
             DetailPaneFocus::Top => vec![
