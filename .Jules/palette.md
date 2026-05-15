@@ -39,3 +39,6 @@
 ## 2025-05-20 - Styling Keybindings as Visual Pills
 **Learning:** In a terminal UI, styling the key and its description together as a single visual element (a "pill") by bridging their background colors instead of using simple text separators significantly improves scannability and visual hierarchy in the footer.
 **Action:** When creating keybinding footers, remove the background color from the parent container and instead apply background colors directly to the key and description parts. Use simple spacing between these combined elements instead of line separators like `│` to make them look like individual UI components.
+## 2025-05-21 - Dynamic Keybinding Labels
+**Learning:** In a terminal UI, providing interactive toggle actions (like a timer) using generic labels like "Toggle" fails to communicate the actual outcome of the action. By dynamically updating the action label to reflect the specific outcome (e.g., "Start Timer" vs "Stop Timer") based on the selected item's state, it reduces cognitive load and improves confidence before executing an action.
+**Action:** When implementing toggle or multi-state actions in a TUI, dynamically compute the keybinding label to clearly reflect the resulting action instead of using a generic "Toggle" description.

@@ -344,12 +344,23 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
 
 fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     let bindings = match app.mode {
-        ViewMode::List => vec![
-            ("q", "Quit"),
-            ("\u{2191}\u{2193}/j/k", "Navigate"),
-            ("Enter", "Details"),
-            ("Space", "Toggle Timer"),
-        ],
+        ViewMode::List => {
+            let toggle_action = if let Some(timer) = app.selected_timer() {
+                if timer.status == "Active" || timer.status == "Waiting" {
+                    "Stop Timer"
+                } else {
+                    "Start Timer"
+                }
+            } else {
+                "Toggle Timer"
+            };
+            vec![
+                ("q", "Quit"),
+                ("\u{2191}\u{2193}/j/k", "Navigate"),
+                ("Enter", "Details"),
+                ("Space", toggle_action),
+            ]
+        }
         ViewMode::Detail => match app.detail_focus {
             DetailPaneFocus::Top => vec![
                 ("q", "Quit"),
@@ -805,5 +816,85 @@ mod tests {
         // 50% width and height on wider parent
         let child3 = centered_rect(50, 50, parent2);
         assert_eq!(child3, Rect::new(50, 25, 100, 50));
+    }
+}
+
+#[cfg(test)]
+mod additional_tests {
+    use super::*;
+    use crate::app::{App, ViewMode};
+    use crate::systemd::TimerInfo;
+    use ratatui::{Terminal, backend::TestBackend};
+
+    #[test]
+    fn test_draw_footer_dynamic_toggle_active() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.mode = ViewMode::List;
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Stop Timer"));
+    }
+
+    #[test]
+    fn test_draw_footer_dynamic_toggle_inactive() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Inactive".into(),
+            schedule: "daily".into(),
+        });
+        app.mode = ViewMode::List;
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Start Timer"));
     }
 }
