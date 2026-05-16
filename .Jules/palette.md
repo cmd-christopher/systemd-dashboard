@@ -42,3 +42,7 @@
 ## 2025-05-21 - Dynamic Action Labels for Toggle States
 **Learning:** Generic action labels like "Toggle Timer" require users to mentally calculate the current state and the resulting action. Dynamically updating the label to explicit verbs (e.g., "Start Timer" or "Stop Timer") based on the selected item's current state significantly reduces cognitive load and improves confidence.
 **Action:** When providing interactive toggle actions in a UI, dynamically update the action label text to reflect the exact outcome (e.g., "Start" vs "Stop", "Enable" vs "Disable") instead of using a generic "Toggle" description.
+
+## 2026-05-16 - Graceful empty states in detail panes
+**Learning:** When journalctl returns '-- No entries --' or a file is empty, displaying raw blank/system text in a TUI lacks polish. Providing centered, context-aware empty states gives users immediate understanding of why the view is blank.
+**Action:** Always parse empty states or default system responses ('-- No entries --') and replace them with formatted, centered empty-state messages explaining the context.
