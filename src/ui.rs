@@ -288,14 +288,31 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         app.detail_scroll = app.detail_max_scroll;
     }
 
-    let logs_list = Paragraph::new(app.detail_logs.as_str())
-        .block(logs_block)
-        .wrap(Wrap { trim: false })
-        .scroll((app.detail_scroll as u16, 0));
+    let is_empty_logs =
+        app.detail_logs.trim().is_empty() || app.detail_logs.trim() == "-- No entries --";
 
-    f.render_widget(logs_list, chunks[1]);
+    if is_empty_logs {
+        let empty_msg = match app.detail_content_mode {
+            DetailContentMode::Logs => {
+                "\n\nNo logs found for this service. It may not have run yet."
+            }
+            DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.",
+        };
+        let empty_para = Paragraph::new(empty_msg)
+            .style(Style::default().fg(Color::DarkGray))
+            .alignment(ratatui::layout::Alignment::Center)
+            .block(logs_block);
+        f.render_widget(empty_para, chunks[1]);
+    } else {
+        let logs_list = Paragraph::new(app.detail_logs.as_str())
+            .block(logs_block)
+            .wrap(Wrap { trim: false })
+            .scroll((app.detail_scroll as u16, 0));
 
-    if app.detail_max_scroll > 0 {
+        f.render_widget(logs_list, chunks[1]);
+    }
+
+    if !is_empty_logs && app.detail_max_scroll > 0 {
         let mut scrollbar_state =
             ScrollbarState::new(app.detail_max_scroll).position(app.detail_scroll);
         f.render_stateful_widget(
