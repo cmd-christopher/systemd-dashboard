@@ -46,3 +46,9 @@
 ## 2026-05-16 - Graceful empty states in detail panes
 **Learning:** When journalctl returns '-- No entries --' or a file is empty, displaying raw blank/system text in a TUI lacks polish. Providing centered, context-aware empty states gives users immediate understanding of why the view is blank.
 **Action:** Always parse empty states or default system responses ('-- No entries --') and replace them with formatted, centered empty-state messages explaining the context.
+## 2025-05-22 - Hide inapplicable contextual keybindings
+**Learning:** In a TUI application, displaying keybinding options for actions that are not currently applicable (e.g., "Navigate" or "Toggle" in an empty list) creates a broken UX feel and confusing experience for users. Hiding these non-applicable options reduces cognitive load.
+**Action:** When rendering footer keybindings dynamically based on the current view mode, explicitly check the data state (e.g., `is_empty()`) to only show keybindings for actions that the user can actually perform.
+## 2025-05-22 - Contrast for highlighted states
+**Learning:** Using `Color::DarkGray` for text inside a table creates a contrast issue when the row selection highlight is also `Color::DarkGray`.
+**Action:** Always ensure that text colors within selectable rows have sufficient contrast against both the default background and the highlighted background.
