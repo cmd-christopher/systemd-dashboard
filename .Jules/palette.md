@@ -52,3 +52,6 @@
 ## 2025-05-22 - Contrast for highlighted states
 **Learning:** Using `Color::DarkGray` for text inside a table creates a contrast issue when the row selection highlight is also `Color::DarkGray`.
 **Action:** Always ensure that text colors within selectable rows have sufficient contrast against both the default background and the highlighted background.
+## 2026-05-19 - Hide inactive footer keybindings
+**Learning:** Relying on static footer keybindings causes user confusion when the actions aren't applicable. Dynamically hiding them based on state reduces cognitive load.
+**Action:** Always verify if a footer keybinding represents a currently valid action (e.g. scrollability) and hide it when invalid.
