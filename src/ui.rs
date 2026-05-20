@@ -390,12 +390,13 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
                 ("Tab", "Focus Bottom"),
                 ("\u{2190}\u{2192}", "Switch Mode"),
             ],
-            DetailPaneFocus::Bottom => vec![
-                ("q", "Quit"),
-                ("Esc", "Back"),
-                ("Tab", "Focus Top"),
-                ("\u{2191}\u{2193}/j/k", "Scroll"),
-            ],
+            DetailPaneFocus::Bottom => {
+                let mut binds = vec![("q", "Quit"), ("Esc", "Back"), ("Tab", "Focus Top")];
+                if app.detail_max_scroll > 0 {
+                    binds.push(("\u{2191}\u{2193}/j/k", "Scroll"));
+                }
+                binds
+            }
         },
     };
 
@@ -833,12 +834,13 @@ mod tests {
     }
 
     #[test]
-    fn test_draw_footer_detail_bottom_focus() {
+    fn test_draw_footer_detail_bottom_focus_with_scroll() {
         let backend = TestBackend::new(80, 24);
         let mut terminal = Terminal::new(backend).unwrap();
         let mut app = App::new();
         app.mode = ViewMode::Detail;
         app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
 
         terminal
             .draw(|f| {
@@ -860,6 +862,37 @@ mod tests {
         assert!(content.contains("Back"));
         assert!(content.contains("Focus Top"));
         assert!(content.contains("Scroll"));
+    }
+
+    #[test]
+    fn test_draw_footer_detail_bottom_focus_without_scroll() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.mode = ViewMode::Detail;
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 0;
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Quit"));
+        assert!(content.contains("Back"));
+        assert!(content.contains("Focus Top"));
+        assert!(!content.contains("Scroll"));
     }
 
     #[test]

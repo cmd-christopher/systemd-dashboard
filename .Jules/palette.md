@@ -52,3 +52,6 @@
 ## 2025-05-22 - Contrast for highlighted states
 **Learning:** Using `Color::DarkGray` for text inside a table creates a contrast issue when the row selection highlight is also `Color::DarkGray`.
 **Action:** Always ensure that text colors within selectable rows have sufficient contrast against both the default background and the highlighted background.
+## 2025-05-23 - Contextual visual cues for scrollability
+**Learning:** Hiding scroll keybindings when a detail pane has no overflow text avoids confusing the user into thinking there is more hidden content to read.
+**Action:** Always dynamically remove "Scroll" bindings from keybinding footers when max scroll is zero.
