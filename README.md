@@ -40,10 +40,37 @@ cd systemd-dashboard
 cargo build --release
 ```
 
+### Installing the `timers` Command
+
+To run the dashboard by typing `timers` from anywhere, install the binary with Cargo:
+
+```bash
+git clone https://github.com/christopher/systemd-dashboard.git
+cd systemd-dashboard
+cargo install --path .
+```
+
+This builds the release version and installs it as `timers` in Cargo's binary directory, usually `~/.cargo/bin`.
+
+If your shell cannot find `timers` after installation, make sure Cargo's binary directory is on your `PATH`:
+
+```bash
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+For Zsh, use `~/.zshrc` instead of `~/.bashrc`.
+
 ### Running
 
 ```bash
 cargo run --release
+```
+
+Or, after installing it:
+
+```bash
+timers
 ```
 
 ## Architecture
