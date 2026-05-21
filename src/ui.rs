@@ -294,7 +294,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     if is_empty_logs {
         let empty_msg = match app.detail_content_mode {
             DetailContentMode::Logs => {
-                "\n\nNo logs found for this service. It may not have run yet."
+                "\n\nNo logs found for this service. It may not have run yet.\nPress [Space] to start the timer and generate logs."
             }
             DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.",
         };
@@ -389,12 +389,14 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
                 ("Esc", "Back"),
                 ("Tab", "Focus Bottom"),
                 ("\u{2190}\u{2192}", "Switch Mode"),
+                ("Space", toggle_desc),
             ],
             DetailPaneFocus::Bottom => {
                 let mut binds = vec![("q", "Quit"), ("Esc", "Back"), ("Tab", "Focus Top")];
                 if app.detail_max_scroll > 0 {
                     binds.push(("\u{2191}\u{2193}/j/k", "Scroll"));
                 }
+                binds.push(("Space", toggle_desc));
                 binds
             }
         },
