@@ -55,3 +55,6 @@
 ## 2025-05-23 - Contextual visual cues for scrollability
 **Learning:** Hiding scroll keybindings when a detail pane has no overflow text avoids confusing the user into thinking there is more hidden content to read.
 **Action:** Always dynamically remove "Scroll" bindings from keybinding footers when max scroll is zero.
+## 2025-05-24 - Actionable Empty States Call to Action
+**Learning:** An empty state that simply states "No logs found" leaves the user at a dead end, even if there's a keybinding footer available. Directly embedding the specific action needed to resolve the empty state (like "Press [Space] to start the timer") directly inside the empty state message itself provides a much stronger, more discoverable affordance.
+**Action:** When creating empty states, always consider if there is an immediate action the user can take to populate the view, and include a clear, actionable instruction (like mentioning the specific keybinding) in the empty state text.

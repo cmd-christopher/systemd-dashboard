@@ -129,6 +129,28 @@ async fn run_app<B: ratatui::backend::Backend>(
     }
 }
 
+async fn handle_toggle_timer(app: &mut App) {
+    let toggle_op = if let Some(timer) = app.selected_timer() {
+        let is_active = timer.status == "Active" || timer.status == "Waiting";
+        Some(crate::systemd::toggle_timer(&timer.unit, !is_active).await)
+    } else {
+        None
+    };
+
+    if let Some(result) = toggle_op {
+        match result {
+            Ok(_) => {
+                app.error = None;
+                match fetch_timers().await {
+                    Ok(timers) => app.replace_timers(timers),
+                    Err(e) => app.error = Some(e),
+                }
+            }
+            Err(e) => app.error = Some(e),
+        }
+    }
+}
+
 async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
     match key_code {
         KeyCode::Char('q') => return true,
@@ -168,25 +190,7 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
             }
         }
         KeyCode::Char(' ') => {
-            let toggle_op = if let Some(timer) = app.selected_timer() {
-                let is_active = timer.status == "Active" || timer.status == "Waiting";
-                Some(crate::systemd::toggle_timer(&timer.unit, !is_active).await)
-            } else {
-                None
-            };
-
-            if let Some(result) = toggle_op {
-                match result {
-                    Ok(_) => {
-                        app.error = None;
-                        match fetch_timers().await {
-                            Ok(timers) => app.replace_timers(timers),
-                            Err(e) => app.error = Some(e),
-                        }
-                    }
-                    Err(e) => app.error = Some(e),
-                }
-            }
+            handle_toggle_timer(app).await;
         }
         _ => {}
     }
@@ -215,6 +219,10 @@ async fn handle_detail_input(app: &mut App, key_code: KeyCode) -> bool {
         }
         KeyCode::Char('k') if matches!(app.detail_focus, DetailPaneFocus::Bottom) => {
             app.scroll_detail_up();
+        }
+        KeyCode::Char(' ') => {
+            handle_toggle_timer(app).await;
+            refresh_detail_content(app, false).await;
         }
         KeyCode::Char('q') => return true,
         _ => {}
