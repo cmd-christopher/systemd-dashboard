@@ -87,7 +87,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         .map(|h| {
             Cell::from(*h).style(
                 Style::default()
-                    .fg(Color::Black)
+                    .fg(Color::White)
                     .add_modifier(Modifier::BOLD),
             )
         });
@@ -218,7 +218,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     let top_prefix = if top_active {
         " ▶ Status: "
     } else {
-        " Status: "
+        "   Status: "
     };
     let status_block = Block::default()
         .borders(Borders::ALL)
@@ -247,7 +247,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     let bottom_prefix = if bottom_active {
         " ▶ Bottom Pane: "
     } else {
-        " Bottom Pane: "
+        "   Bottom Pane: "
     };
     let bottom_title = match app.detail_content_mode {
         DetailContentMode::Logs => {
