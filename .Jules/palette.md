@@ -58,3 +58,10 @@
 ## 2025-05-24 - Actionable Empty States Call to Action
 **Learning:** An empty state that simply states "No logs found" leaves the user at a dead end, even if there's a keybinding footer available. Directly embedding the specific action needed to resolve the empty state (like "Press [Space] to start the timer") directly inside the empty state message itself provides a much stronger, more discoverable affordance.
 **Action:** When creating empty states, always consider if there is an immediate action the user can take to populate the view, and include a clear, actionable instruction (like mentioning the specific keybinding) in the empty state text.
+## 2025-05-25 - Prevent UI Jitter with Consistent Prefix Lengths
+**Learning:** In TUI applications, dynamically changing prefix symbols (like showing '▶' only on the active element) without adding padding to the inactive state causes the title text to shift left and right horizontally. This visual jitter when changing focus is distracting and breaks immersion.
+**Action:** Always match the string length of the inactive prefix state (e.g., `"   Status: "`) to the active prefix state (e.g., `" ▶ Status: "`) to prevent layout shifts.
+
+## 2025-05-25 - Table Header Contrast on Colored Backgrounds
+**Learning:** Using `Color::Black` for table header text on a dark or colored background (like `Color::Blue`) results in poor contrast, making the headers difficult to read for some users and violating accessibility guidelines.
+**Action:** When using background colors for table headers or highlight rows, ensure the foreground text color provides sufficient contrast, defaulting to `Color::White` for darker backgrounds.
