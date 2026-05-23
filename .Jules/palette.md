@@ -65,3 +65,6 @@
 ## 2025-05-25 - Table Header Contrast on Colored Backgrounds
 **Learning:** Using `Color::Black` for table header text on a dark or colored background (like `Color::Blue`) results in poor contrast, making the headers difficult to read for some users and violating accessibility guidelines.
 **Action:** When using background colors for table headers or highlight rows, ensure the foreground text color provides sufficient contrast, defaulting to `Color::White` for darker backgrounds.
+## 2025-05-26 - Inactive Status Contrast in Table
+**Learning:** Using Color::Gray text inside a table creates a contrast issue when the row selection highlight is Color::DarkGray, violating accessibility guidelines for readable text.
+**Action:** Updated the inactive status text color to Color::White to provide high contrast against both the default terminal background and the Color::DarkGray selection highlight.
