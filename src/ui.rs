@@ -299,7 +299,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.",
         };
         let empty_para = Paragraph::new(empty_msg)
-            .style(Style::default().fg(Color::DarkGray))
+            .style(Style::default().fg(Color::Gray))
             .alignment(ratatui::layout::Alignment::Center)
             .block(logs_block);
         f.render_widget(empty_para, chunks[1]);
