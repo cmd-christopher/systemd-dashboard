@@ -68,3 +68,6 @@
 ## 2025-05-26 - Inactive Status Contrast in Table
 **Learning:** Using Color::Gray text inside a table creates a contrast issue when the row selection highlight is Color::DarkGray, violating accessibility guidelines for readable text.
 **Action:** Updated the inactive status text color to Color::White to provide high contrast against both the default terminal background and the Color::DarkGray selection highlight.
+## 2025-05-27 - Contrast for Empty States
+**Learning:** Using `Color::DarkGray` for empty state text (like 'No logs found') can result in poor contrast and readability on default terminal backgrounds. It violates accessibility guidelines by being too difficult to read for some users.
+**Action:** When designing empty state messages, use `Color::Gray` instead of `Color::DarkGray` to ensure sufficient contrast against typical terminal backgrounds while still visually distinguishing it from normal text.
