@@ -99,7 +99,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     let rows = app.timers.iter().map(|item| {
         let status_cell = match item.status.as_str() {
             "Active" => Cell::from("✔ Active").style(Style::default().fg(Color::Green)),
-            "Waiting" => Cell::from("⏳ Waiting").style(Style::default().fg(Color::Blue)),
+            "Waiting" => Cell::from("⏳ Waiting").style(Style::default().fg(Color::Cyan)),
             "Inactive" => Cell::from("⏸ Inactive").style(Style::default().fg(Color::White)),
             _ => Cell::from(format!("⚠ {}", item.status)).style(Style::default().fg(Color::Red)),
         };
@@ -259,7 +259,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
-                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::DarkGray)),
+                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::Gray)),
                 ])
             }
         }

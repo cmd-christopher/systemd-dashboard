@@ -71,3 +71,6 @@
 ## 2025-05-27 - Contrast for Empty States
 **Learning:** Using `Color::DarkGray` for empty state text (like 'No logs found') can result in poor contrast and readability on default terminal backgrounds. It violates accessibility guidelines by being too difficult to read for some users.
 **Action:** When designing empty state messages, use `Color::Gray` instead of `Color::DarkGray` to ensure sufficient contrast against typical terminal backgrounds while still visually distinguishing it from normal text.
+## 2024-05-18 - [Improve color contrast for UI legibility]
+**Learning:** Using `Color::Blue` for text foregrounds on dark terminal backgrounds or `Color::DarkGray` row selection highlights results in poor contrast and readability. The same is true for `Color::DarkGray` text.
+**Action:** Default to lighter shades like `Color::Cyan` for states like 'Waiting' or `Color::Gray` for inactive states to ensure accessibility.
