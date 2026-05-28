@@ -35,7 +35,7 @@ A high-performance, terminal-based graphical tool for visualizing and managing *
 ### Building from Source
 
 ```bash
-git clone https://github.com/christopher/systemd-dashboard.git
+git clone https://github.com/cmd-christopher/systemd-dashboard.git
 cd systemd-dashboard
 cargo build --release
 ```
@@ -45,7 +45,7 @@ cargo build --release
 To run the dashboard by typing `timers` from anywhere, install the binary with Cargo:
 
 ```bash
-git clone https://github.com/christopher/systemd-dashboard.git
+git clone https://github.com/cmd-christopher/systemd-dashboard.git
 cd systemd-dashboard
 cargo install --path .
 ```
