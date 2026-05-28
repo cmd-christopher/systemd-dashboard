@@ -30,7 +30,17 @@ A high-performance, terminal-based graphical tool for visualizing and managing *
 
 ### Prerequisites
 
-- **Rust**: Ensure you have a recent version of the Rust toolchain installed (`cargo`, `rustc`).
+- **Rust 1.75 or newer**: Install the Rust toolchain (`cargo`, `rustc`). Using
+  [rustup](https://rustup.rs/) is recommended because Linux distribution packages
+  can be older than this project's minimum supported Rust version.
+
+If `cargo --version` reports an older version, install or update Rust with rustup:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+. "$HOME/.cargo/env"
+rustup update stable
+```
 
 ### Building from Source
 
@@ -55,11 +65,11 @@ This builds the release version and installs it as `timers` in Cargo's binary di
 If your shell cannot find `timers` after installation, make sure Cargo's binary directory is on your `PATH`:
 
 ```bash
-echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
+. "$HOME/.cargo/env"
 ```
 
-For Zsh, use `~/.zshrc` instead of `~/.bashrc`.
+To make that permanent, restart your shell after installing rustup, or add
+`source "$HOME/.cargo/env"` to your shell startup file.
 
 ### Running
 
