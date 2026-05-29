@@ -259,7 +259,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
-                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::DarkGray)),
+                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::Gray)),
                 ])
             }
         }
