@@ -74,3 +74,6 @@
 ## 2026-05-28 - Contrast for 'Waiting' Status Text
 **Learning:** Using `Color::Blue` for text foregrounds (like 'Waiting' states) can result in poor contrast and readability on dark terminal backgrounds or dark row selection highlights (e.g. `Color::DarkGray`). This violates accessibility guidelines by being too difficult to read for some users.
 **Action:** When styling text for specific states like 'Waiting', prefer lighter shades like `Color::Cyan` to ensure high contrast against typical terminal backgrounds and highlighted states.
+## 2025-05-29 - Contrast for Subtle Status Indicators
+**Learning:** Using Color::DarkGray for subtle status indicators like '[Auto-scroll: Off]' causes contrast issues on standard dark terminal backgrounds.
+**Action:** When styling non-active or subtle UI elements, prefer Color::Gray to maintain visual hierarchy without violating accessibility guidelines for text readability.

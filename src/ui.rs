@@ -119,8 +119,9 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     });
 
     if app.timers.is_empty() {
-        let empty_msg = "\n\nNo user systemd timers found.\n\nCreate a timer in ~/.config/systemd/user/ to see it here.";
+        let empty_msg = "\n\nNo user systemd timers found.\n\nCreate a timer in ~/.config/systemd/user/ to see it here.\n\nPress [q] to quit.";
         let empty_para = Paragraph::new(empty_msg)
+            .style(Style::default().fg(Color::Gray))
             .alignment(ratatui::layout::Alignment::Center)
             .block(
                 Block::default()
@@ -259,7 +260,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
-                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::DarkGray)),
+                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::Gray)),
                 ])
             }
         }
@@ -296,7 +297,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             DetailContentMode::Logs => {
                 "\n\nNo logs found for this service. It may not have run yet.\nPress [Space] to start the timer and generate logs."
             }
-            DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.",
+            DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.\nPress [Esc] to return.",
         };
         let empty_para = Paragraph::new(empty_msg)
             .style(Style::default().fg(Color::Gray))
