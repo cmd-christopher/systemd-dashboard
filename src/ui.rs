@@ -352,9 +352,12 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .style(Style::default().fg(Color::Red))
+        .border_style(Style::default().fg(Color::Red))
         .title(" Error (Press any key to dismiss) ");
-    let para = Paragraph::new(msg).block(block).wrap(Wrap { trim: true });
+    let para = Paragraph::new(msg)
+        .style(Style::default().fg(Color::White))
+        .block(block)
+        .wrap(Wrap { trim: true });
 
     f.render_widget(Clear, popup_area);
     f.render_widget(para, popup_area);

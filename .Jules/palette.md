@@ -77,3 +77,6 @@
 ## 2025-05-29 - Contrast for Subtle Status Indicators
 **Learning:** Using Color::DarkGray for subtle status indicators like '[Auto-scroll: Off]' causes contrast issues on standard dark terminal backgrounds.
 **Action:** When styling non-active or subtle UI elements, prefer Color::Gray to maintain visual hierarchy without violating accessibility guidelines for text readability.
+## 2025-05-30 - High Contrast Error Popup
+**Learning:** Applying a text color directly to a Block in Ratatui sets the color for both the border and all internal text by default. Using `Color::Red` for an error border causes the error text itself to become red, which can severely compromise readability and contrast on standard dark backgrounds, violating accessibility principles.
+**Action:** Always separate border styling from text styling in alert/error popups. Use `.border_style(Style::default().fg(Color::Red))` for the Block and `.style(Style::default().fg(Color::White))` for the inner text Paragraph to preserve both the visual error cue and text readability.
