@@ -80,3 +80,6 @@
 ## 2025-05-30 - High Contrast Error Popup
 **Learning:** Applying a text color directly to a Block in Ratatui sets the color for both the border and all internal text by default. Using `Color::Red` for an error border causes the error text itself to become red, which can severely compromise readability and contrast on standard dark backgrounds, violating accessibility principles.
 **Action:** Always separate border styling from text styling in alert/error popups. Use `.border_style(Style::default().fg(Color::Red))` for the Block and `.style(Style::default().fg(Color::White))` for the inner text Paragraph to preserve both the visual error cue and text readability.
+## 2024-05-31 - Add Refresh Shortcut key
+**Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
+**Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
