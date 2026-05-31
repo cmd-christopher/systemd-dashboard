@@ -9,9 +9,9 @@ use crate::systemd::{
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::{Terminal, backend::CrosstermBackend};
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{
     error::Error,
     io,
@@ -192,6 +192,12 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
         KeyCode::Char(' ') => {
             handle_toggle_timer(app).await;
         }
+        KeyCode::Char('r') => {
+            match fetch_timers().await {
+                Ok(timers) => app.replace_timers(timers),
+                Err(e) => app.error = Some(e),
+            }
+        }
         _ => {}
     }
     false
@@ -225,6 +231,22 @@ async fn handle_detail_input(app: &mut App, key_code: KeyCode) -> bool {
             refresh_detail_content(app, false).await;
         }
         KeyCode::Char('q') => return true,
+        KeyCode::Char('r') => {
+            match fetch_timers().await {
+                Ok(timers) => app.replace_timers(timers),
+                Err(e) => app.error = Some(e),
+            }
+            if let Some(timer) = app.selected_timer() {
+                match fetch_timer_status(&timer.unit).await {
+                    Ok(status) => {
+                        app.detail_status = status;
+                        app.update_status_text();
+                    }
+                    Err(e) => app.error = Some(e),
+                }
+            }
+            refresh_detail_content(app, false).await;
+        }
         _ => {}
     }
     false

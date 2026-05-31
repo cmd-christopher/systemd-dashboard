@@ -1,4 +1,4 @@
-use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn bench_format(c: &mut Criterion) {
     let t_unit = "sysstat-collect.timer";

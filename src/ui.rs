@@ -1,6 +1,5 @@
 use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
 use ratatui::{
-    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
@@ -8,6 +7,7 @@ use ratatui::{
         Block, Borders, Cell, Clear, Paragraph, Row, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Table, TableState, Wrap,
     },
+    Frame,
 };
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
@@ -119,7 +119,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     });
 
     if app.timers.is_empty() {
-        let empty_msg = "\n\nNo user systemd timers found.\n\nCreate a timer in ~/.config/systemd/user/ to see it here.\n\nPress [q] to quit.";
+        let empty_msg = "\n\nNo user systemd timers found.\n\nCreate a timer in ~/.config/systemd/user/ to see it here.\n\nPress [r] to refresh or [q] to quit.";
         let empty_para = Paragraph::new(empty_msg)
             .style(Style::default().fg(Color::Gray))
             .alignment(ratatui::layout::Alignment::Center)
@@ -377,10 +377,11 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     let bindings = match app.mode {
         ViewMode::List => {
             if app.timers.is_empty() {
-                vec![("q", "Quit")]
+                vec![("q", "Quit"), ("r", "Refresh")]
             } else {
                 vec![
                     ("q", "Quit"),
+                    ("r", "Refresh"),
                     ("\u{2191}\u{2193}/j/k", "Navigate"),
                     ("Enter", "Details"),
                     ("Space", toggle_desc),
@@ -390,13 +391,14 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
         ViewMode::Detail => match app.detail_focus {
             DetailPaneFocus::Top => vec![
                 ("q", "Quit"),
+                ("r", "Refresh"),
                 ("Esc", "Back"),
                 ("Tab", "Focus Bottom"),
                 ("\u{2190}\u{2192}", "Switch Mode"),
                 ("Space", toggle_desc),
             ],
             DetailPaneFocus::Bottom => {
-                let mut binds = vec![("q", "Quit"), ("Esc", "Back"), ("Tab", "Focus Top")];
+                let mut binds = vec![("q", "Quit"), ("r", "Refresh"), ("Esc", "Back"), ("Tab", "Focus Top")];
                 if app.detail_max_scroll > 0 {
                     binds.push(("\u{2191}\u{2193}/j/k", "Scroll"));
                 }
@@ -430,7 +432,7 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
 mod tests {
     use super::*;
     use crate::systemd::TimerInfo;
-    use ratatui::{Terminal, backend::TestBackend};
+    use ratatui::{backend::TestBackend, Terminal};
 
     #[test]
     fn test_draw_list_empty() {
@@ -773,9 +775,10 @@ mod tests {
             .join("\n");
 
         assert!(content.contains("Quit"));
+        assert!(content.contains("Refresh"));
         assert!(content.contains("Navigate"));
         assert!(content.contains("Details"));
-        assert!(content.contains("Stop Timer"));
+        assert!(content.contains("Stop"));
     }
 
     #[test]
@@ -803,6 +806,7 @@ mod tests {
             .join("\n");
 
         assert!(content.contains("Quit"));
+        assert!(content.contains("Refresh"));
         assert!(!content.contains("Navigate"));
         assert!(!content.contains("Details"));
         assert!(!content.contains("Toggle Timer"));

@@ -72,7 +72,11 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
                 .unwrap_or_else(|| "n/a".to_string());
 
             let status = if let Some(n) = raw.next {
-                if n > now { "Active" } else { "Waiting" }
+                if n > now {
+                    "Active"
+                } else {
+                    "Waiting"
+                }
             } else {
                 "Inactive"
             };
@@ -389,8 +393,8 @@ pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        RawTimerInfo, dedupe_schedule_values, extract_timer_metadata, format_time_abs,
-        format_time_rel, normalize_service_file_output,
+        dedupe_schedule_values, extract_timer_metadata, format_time_abs, format_time_rel,
+        normalize_service_file_output, RawTimerInfo,
     };
 
     #[test]
