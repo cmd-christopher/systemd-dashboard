@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2025-05-31 - Separate Error Label and Instruction Contrast
+**Learning:** Applying a text color directly to an error Block (like `Color::Red`) cascades down to any string title. This causes secondary instructional text (like "Press any key to dismiss") in the title to become red, which reduces its contrast and readability on dark backgrounds.
+**Action:** When creating alert or error popups, explicitly style the title components using `Line::from` with multiple `Span`s. Keep the semantic severity label (e.g., "Error") colored (Red), but ensure instructional text is highly readable (White) to maintain accessibility.
