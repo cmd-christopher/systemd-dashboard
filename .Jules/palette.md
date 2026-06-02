@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2025-06-01 - Separate Block title styling for contrast
+**Learning:** Applying a text color directly to a Block (via `.style()` or `.border_style()`) applies it to the entire title by default. For error popups with a red border, this makes instructional text in the title red as well, causing contrast/readability issues.
+**Action:** To prevent a `Block`'s border color from cascading to the entire title, explicitly style the `.title()` using `Line::from` with multiple `Span`s. This allows coloring the severity label appropriately while keeping secondary instructional text a high-contrast `Color::White`.
