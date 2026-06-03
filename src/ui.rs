@@ -119,9 +119,22 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     });
 
     if app.timers.is_empty() {
-        let empty_msg = "\n\nNo user systemd timers found.\n\nCreate a timer in ~/.config/systemd/user/ to see it here.\n\nPress [r] to refresh or [q] to quit.";
-        let empty_para = Paragraph::new(empty_msg)
-            .style(Style::default().fg(Color::Gray))
+        let empty_para = Paragraph::new(vec![
+            Line::from(""),
+            Line::from(""),
+            Line::from("No user systemd timers found."),
+            Line::from(""),
+            Line::from("Create a timer in ~/.config/systemd/user/ to see it here."),
+            Line::from(""),
+            Line::from(vec![
+                Span::raw("Press "),
+                Span::styled("[r]", Style::default().add_modifier(Modifier::BOLD).fg(Color::White)),
+                Span::raw(" to refresh or "),
+                Span::styled("[q]", Style::default().add_modifier(Modifier::BOLD).fg(Color::White)),
+                Span::raw(" to quit."),
+            ]),
+        ])
+            .style(Style::default().fg(Color::White))
             .alignment(ratatui::layout::Alignment::Center)
             .block(
                 Block::default()
@@ -293,17 +306,38 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         app.detail_logs.trim().is_empty() || app.detail_logs.trim() == "-- No entries --";
 
     if is_empty_logs {
-        let empty_msg = match app.detail_content_mode {
+        let empty_para = match app.detail_content_mode {
             DetailContentMode::Logs => {
-                "\n\nNo logs found for this service. It may not have run yet.\nPress [Space] to start the timer and generate logs."
+                Paragraph::new(vec![
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from("No logs found for this service. It may not have run yet."),
+                    Line::from(vec![
+                        Span::raw("Press "),
+                        Span::styled("[Space]", Style::default().add_modifier(Modifier::BOLD).fg(Color::White)),
+                        Span::raw(" to start the timer and generate logs.")
+                    ]),
+                ])
             }
-            DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.\nPress [Esc] to return.",
+            DetailContentMode::ServiceFile => {
+                Paragraph::new(vec![
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from("Service file is empty or unavailable."),
+                    Line::from(vec![
+                        Span::raw("Press "),
+                        Span::styled("[Esc]", Style::default().add_modifier(Modifier::BOLD).fg(Color::White)),
+                        Span::raw(" to return.")
+                    ]),
+                ])
+            }
         };
-        let empty_para = Paragraph::new(empty_msg)
-            .style(Style::default().fg(Color::Gray))
+
+        let styled_empty_para = empty_para
+            .style(Style::default().fg(Color::White))
             .alignment(ratatui::layout::Alignment::Center)
             .block(logs_block);
-        f.render_widget(empty_para, chunks[1]);
+        f.render_widget(styled_empty_para, chunks[1]);
     } else {
         let logs_list = Paragraph::new(app.detail_logs.as_str())
             .block(logs_block)
@@ -353,7 +387,10 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Red))
-        .title(" Error (Press any key to dismiss) ");
+        .title(Line::from(vec![
+            Span::styled(" Error ", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)),
+            Span::styled("(Press any key to dismiss) ", Style::default().fg(Color::White)),
+        ]));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)

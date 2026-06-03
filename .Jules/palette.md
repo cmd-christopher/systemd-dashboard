@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2026-06-03 - Enhanced Empty States with Affordances
+**Learning:** Raw terminal text empty states (like journalctl's "-- No entries --") feel like errors rather than actionable states. Directly embedding actions and keybindings inside standard Ratatui empty state messages provides strong, discoverable affordances and prevents users from being stuck with generic blank interfaces.
+**Action:** When designing TUI empty states, intercept raw empty strings and replace them with centered, multi-line `Paragraph` blocks that explicitly call out the next actionable step with styled keybindings (e.g., "[Space] to start timer").
