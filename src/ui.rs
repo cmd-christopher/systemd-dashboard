@@ -353,7 +353,18 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Red))
-        .title(" Error (Press any key to dismiss) ");
+        .title(Line::from(vec![
+            Span::styled(
+                " Error ",
+                Style::default()
+                    .fg(Color::Red)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                "(Press any key to dismiss) ",
+                Style::default().fg(Color::White),
+            ),
+        ]));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
