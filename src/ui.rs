@@ -127,7 +127,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(Style::default().fg(Color::Magenta))
-                    .title(" Systemd Timers "),
+                    .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
             );
         f.render_widget(empty_para, area);
         return;
@@ -148,7 +148,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Magenta))
-            .title(" Systemd Timers "),
+            .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
     )
     .highlight_style(selected_style)
     .highlight_symbol("▶  ");
@@ -232,14 +232,14 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             Span::raw(top_prefix),
             Span::styled(timer, Style::default().add_modifier(Modifier::BOLD)),
             Span::raw(" "),
-        ]))
+        ]).style(Style::default().fg(Color::White)))
         .title(Line::from(vec![
             Span::raw(controls_prefix),
             Span::styled(logs_label, logs_style),
             Span::raw(" | "),
             Span::styled(service_file_label, service_file_style),
             Span::raw(controls_suffix),
-        ]));
+        ]).style(Style::default().fg(Color::White)));
     let status_para = Paragraph::new(status_text)
         .block(status_block)
         .wrap(Wrap { trim: true });
@@ -256,15 +256,15 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
                     Span::styled("[Auto-scroll: On] ", Style::default().fg(Color::Green)),
-                ])
+                ]).style(Style::default().fg(Color::White))
             } else {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
                     Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::Gray)),
-                ])
+                ]).style(Style::default().fg(Color::White))
             }
         }
-        DetailContentMode::ServiceFile => Line::from(format!("{}Service File ", bottom_prefix)),
+        DetailContentMode::ServiceFile => Line::from(format!("{}Service File ", bottom_prefix)).style(Style::default().fg(Color::White)),
     };
     let logs_block = Block::default()
         .borders(Borders::ALL)
@@ -353,7 +353,7 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(Color::Red))
-        .title(" Error (Press any key to dismiss) ");
+        .title(Line::from(vec![Span::styled(" Error ", Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)), Span::styled("(Press any key to dismiss) ", Style::default().fg(Color::White))]));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
