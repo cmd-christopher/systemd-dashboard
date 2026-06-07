@@ -83,3 +83,7 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+
+## 2024-05-14 - [Block Title Contrast in Ratatui]
+**Learning:** Ratatui's `Block::title()` implicitly inherits the color from `.border_style()`. This causes severe contrast issues and unreadable text when using low-contrast colors like `Color::DarkGray` for inactive borders or `Color::Red` for error blocks.
+**Action:** Always wrap `.title()` content in `Line::from` and explicitly style the text (e.g., using `Color::White`) to ensure accessibility and high contrast.
