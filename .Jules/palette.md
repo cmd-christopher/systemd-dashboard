@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2025-06-01 - Prevent low contrast Block titles inheriting border styles
+**Learning:** Block::title text implicitly inherits the border_style color. To prevent low-contrast borders (e.g., Color::Red for errors or Color::DarkGray for inactive panes) from cascading to the title, explicitly style .title() using Line::from with a blanket style or multiple Span's. This ensures text remains high-contrast (e.g., Color::White) against dark terminal backgrounds.
+**Action:** When creating Blocks with styled borders (e.g., warnings, errors, inactive states), explicitly wrap title text in `Line::from("text").style(Style::default().fg(Color::White))` or use styled `Span`s to prevent the border color from making the title unreadable.
