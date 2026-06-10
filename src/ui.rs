@@ -12,6 +12,51 @@ use ratatui::{
 
 const DETAIL_CONTROLS_TITLE: &str = "Detail Controls [Logs | Service File]";
 
+fn emphasis_style() -> Style {
+    Style::default().add_modifier(Modifier::BOLD)
+}
+
+fn header_style() -> Style {
+    Style::default()
+        .fg(Color::Cyan)
+        .add_modifier(Modifier::BOLD)
+        .add_modifier(Modifier::UNDERLINED)
+}
+
+fn selected_style() -> Style {
+    Style::default()
+        .add_modifier(Modifier::BOLD)
+        .add_modifier(Modifier::REVERSED)
+}
+
+fn active_style() -> Style {
+    Style::default()
+        .fg(Color::Green)
+        .add_modifier(Modifier::BOLD)
+}
+
+fn inactive_style() -> Style {
+    Style::default().fg(Color::DarkGray)
+}
+
+fn waiting_style() -> Style {
+    Style::default()
+        .fg(Color::Blue)
+        .add_modifier(Modifier::BOLD)
+}
+
+fn warning_style() -> Style {
+    Style::default().fg(Color::Red).add_modifier(Modifier::BOLD)
+}
+
+fn border_style() -> Style {
+    Style::default().fg(Color::Magenta)
+}
+
+fn muted_style() -> Style {
+    Style::default().fg(Color::DarkGray)
+}
+
 fn count_visual_lines(text: &str, max_width: u16) -> usize {
     let max_width = max_width as usize;
     if max_width == 0 {
@@ -78,38 +123,24 @@ pub fn draw_ui(f: &mut Frame, app: &mut App) {
 }
 
 fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
-    let selected_style = Style::default()
-        .bg(Color::DarkGray)
-        .add_modifier(Modifier::BOLD);
-    let normal_style = Style::default().bg(Color::Blue);
     let header_cells = ["Unit", "Schedule", "Last Run", "Next Run", "Status"]
         .iter()
-        .map(|h| {
-            Cell::from(*h).style(
-                Style::default()
-                    .fg(Color::White)
-                    .add_modifier(Modifier::BOLD),
-            )
-        });
+        .map(|h| Cell::from(*h).style(header_style()));
     let header = Row::new(header_cells)
-        .style(normal_style)
+        .style(header_style())
         .height(1)
         .bottom_margin(1);
 
     let rows = app.timers.iter().map(|item| {
         let status_cell = match item.status.as_str() {
-            "Active" => Cell::from("✔ Active").style(Style::default().fg(Color::Green)),
-            "Waiting" => Cell::from("⏳ Waiting").style(Style::default().fg(Color::Cyan)),
-            "Inactive" => Cell::from("⏸ Inactive").style(Style::default().fg(Color::White)),
-            _ => Cell::from(format!("⚠ {}", item.status)).style(Style::default().fg(Color::Red)),
+            "Active" => Cell::from("✔ Active").style(active_style()),
+            "Waiting" => Cell::from("⏳ Waiting").style(waiting_style()),
+            "Inactive" => Cell::from("⏸ Inactive").style(inactive_style()),
+            _ => Cell::from(format!("⚠ {}", item.status)).style(warning_style()),
         };
 
         let cells = vec![
-            Cell::from(item.unit.as_str()).style(
-                Style::default()
-                    .fg(Color::White)
-                    .add_modifier(Modifier::BOLD),
-            ),
+            Cell::from(item.unit.as_str()).style(emphasis_style()),
             Cell::from(item.schedule.as_str()).style(Style::default().fg(Color::Yellow)),
             Cell::from(item.last_rel.as_str()).style(Style::default().fg(Color::Magenta)),
             Cell::from(item.next_rel.as_str()).style(Style::default().fg(Color::Cyan)),
@@ -126,7 +157,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
             .block(
                 Block::default()
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::Magenta))
+                    .border_style(border_style())
                     .title(" Systemd Timers "),
             );
         f.render_widget(empty_para, area);
@@ -147,10 +178,10 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
     .block(
         Block::default()
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::Magenta))
+            .border_style(border_style())
             .title(" Systemd Timers "),
     )
-    .highlight_style(selected_style)
+    .highlight_style(selected_style())
     .highlight_symbol("▶  ");
 
     let mut state = TableState::default();
@@ -184,21 +215,23 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         .unwrap_or("Unknown");
     let top_active = matches!(app.detail_focus, DetailPaneFocus::Top);
     let bottom_active = matches!(app.detail_focus, DetailPaneFocus::Bottom);
-    let active_border = Style::default().fg(Color::Yellow);
-    let inactive_border = Style::default().fg(Color::DarkGray);
+    let active_border = border_style().add_modifier(Modifier::BOLD);
+    let inactive_border = muted_style();
     let logs_style = if matches!(app.detail_content_mode, DetailContentMode::Logs) {
         Style::default()
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::UNDERLINED)
     } else {
-        Style::default().fg(Color::Gray)
+        muted_style()
     };
     let service_file_style = if matches!(app.detail_content_mode, DetailContentMode::ServiceFile) {
         Style::default()
             .fg(Color::Yellow)
             .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::UNDERLINED)
     } else {
-        Style::default().fg(Color::Gray)
+        muted_style()
     };
     let (controls_prefix, controls_suffix) = DETAIL_CONTROLS_TITLE
         .split_once("Logs | Service File")
@@ -230,7 +263,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .title(Line::from(vec![
             Span::raw(top_prefix),
-            Span::styled(timer, Style::default().add_modifier(Modifier::BOLD)),
+            Span::styled(timer, emphasis_style()),
             Span::raw(" "),
         ]))
         .title(Line::from(vec![
@@ -255,12 +288,12 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             if app.auto_scroll {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
-                    Span::styled("[Auto-scroll: On] ", Style::default().fg(Color::Green)),
+                    Span::styled("[Auto-scroll: On] ", active_style()),
                 ])
             } else {
                 Line::from(vec![
                     Span::raw(format!("{}Logs ", bottom_prefix)),
-                    Span::styled("[Auto-scroll: Off] ", Style::default().fg(Color::Gray)),
+                    Span::styled("[Auto-scroll: Off] ", muted_style()),
                 ])
             }
         }
@@ -300,7 +333,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             DetailContentMode::ServiceFile => "\n\nService file is empty or unavailable.\nPress [Esc] to return.",
         };
         let empty_para = Paragraph::new(empty_msg)
-            .style(Style::default().fg(Color::Gray))
+            .style(muted_style())
             .alignment(ratatui::layout::Alignment::Center)
             .block(logs_block);
         f.render_widget(empty_para, chunks[1]);
@@ -352,7 +385,7 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Red))
+        .style(warning_style())
         .title(" Error (Press any key to dismiss) ");
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
@@ -398,7 +431,12 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
                 ("Space", toggle_desc),
             ],
             DetailPaneFocus::Bottom => {
-                let mut binds = vec![("q", "Quit"), ("r", "Refresh"), ("Esc", "Back"), ("Tab", "Focus Top")];
+                let mut binds = vec![
+                    ("q", "Quit"),
+                    ("r", "Refresh"),
+                    ("Esc", "Back"),
+                    ("Tab", "Focus Top"),
+                ];
                 if app.detail_max_scroll > 0 {
                     binds.push(("\u{2191}\u{2193}/j/k", "Scroll"));
                 }
@@ -409,11 +447,8 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let mut spans = Vec::new();
-    let key_style = Style::default()
-        .fg(Color::Black)
-        .bg(Color::Gray)
-        .add_modifier(Modifier::BOLD);
-    let desc_style = Style::default().fg(Color::White).bg(Color::DarkGray);
+    let key_style = header_style();
+    let desc_style = muted_style();
 
     for (i, (key, desc)) in bindings.iter().enumerate() {
         spans.push(Span::styled(format!(" {} ", key), key_style));

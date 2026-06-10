@@ -192,12 +192,10 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
         KeyCode::Char(' ') => {
             handle_toggle_timer(app).await;
         }
-        KeyCode::Char('r') => {
-            match fetch_timers().await {
-                Ok(timers) => app.replace_timers(timers),
-                Err(e) => app.error = Some(e),
-            }
-        }
+        KeyCode::Char('r') => match fetch_timers().await {
+            Ok(timers) => app.replace_timers(timers),
+            Err(e) => app.error = Some(e),
+        },
         _ => {}
     }
     false
