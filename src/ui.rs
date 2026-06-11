@@ -447,8 +447,13 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let mut spans = Vec::new();
-    let key_style = header_style();
-    let desc_style = muted_style();
+    let key_style = Style::default()
+        .fg(Color::Black)
+        .bg(Color::Cyan)
+        .add_modifier(Modifier::BOLD);
+    let desc_style = Style::default()
+        .fg(Color::Black)
+        .bg(Color::Gray);
 
     for (i, (key, desc)) in bindings.iter().enumerate() {
         spans.push(Span::styled(format!(" {} ", key), key_style));
