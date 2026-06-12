@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2025-05-31 - High Contrast and Visual Pills
+**Learning:** Using `Color::Blue` or `Color::DarkGray` for state text on dark backgrounds causes severe accessibility issues. Furthermore, styling footer commands as integrated visual "pills" significantly improves discoverability.
+**Action:** Default to high-contrast colors (`Color::Cyan`, `Color::White`) for text and states. Use combined background colors for footer key-description pairs to create pill components.

@@ -25,8 +25,8 @@ fn header_style() -> Style {
 
 fn selected_style() -> Style {
     Style::default()
+        .bg(Color::DarkGray)
         .add_modifier(Modifier::BOLD)
-        .add_modifier(Modifier::REVERSED)
 }
 
 fn active_style() -> Style {
@@ -36,12 +36,12 @@ fn active_style() -> Style {
 }
 
 fn inactive_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::White)
 }
 
 fn waiting_style() -> Style {
     Style::default()
-        .fg(Color::Blue)
+        .fg(Color::Cyan)
         .add_modifier(Modifier::BOLD)
 }
 
@@ -54,7 +54,7 @@ fn border_style() -> Style {
 }
 
 fn muted_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::Gray)
 }
 
 fn count_visual_lines(text: &str, max_width: u16) -> usize {
@@ -385,8 +385,11 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .style(warning_style())
-        .title(" Error (Press any key to dismiss) ");
+        .border_style(warning_style())
+        .title(Line::from(Span::styled(
+            " Error (Press any key to dismiss) ",
+            Style::default().fg(Color::White),
+        )));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
@@ -447,8 +450,11 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let mut spans = Vec::new();
-    let key_style = header_style();
-    let desc_style = muted_style();
+    let key_style = Style::default()
+        .bg(Color::Cyan)
+        .fg(Color::Black)
+        .add_modifier(Modifier::BOLD);
+    let desc_style = Style::default().bg(Color::DarkGray).fg(Color::White);
 
     for (i, (key, desc)) in bindings.iter().enumerate() {
         spans.push(Span::styled(format!(" {} ", key), key_style));
