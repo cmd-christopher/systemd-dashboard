@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2024-06-14 - Improve contrast of muted/inactive text
+**Learning:** Using `Color::DarkGray` for inactive states or muted elements on default terminal backgrounds creates significant accessibility (contrast) issues, making text nearly unreadable for many users.
+**Action:** Use `Color::Gray` instead of `Color::DarkGray` for inactive or muted styles in Ratatui/TUI applications to ensure sufficient contrast while still visually distinguishing it from normal/active text.

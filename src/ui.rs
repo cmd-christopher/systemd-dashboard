@@ -36,7 +36,7 @@ fn active_style() -> Style {
 }
 
 fn inactive_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::Gray)
 }
 
 fn waiting_style() -> Style {
@@ -54,7 +54,7 @@ fn border_style() -> Style {
 }
 
 fn muted_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::Gray)
 }
 
 fn count_visual_lines(text: &str, max_width: u16) -> usize {
