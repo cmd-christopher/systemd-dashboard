@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2026-10-24 - Styling Keybindings as Visual Pills
+**Learning:** In a terminal UI, styling the key and its description together as a single visual element (a "pill") by bridging their background colors instead of using simple text separators significantly improves scannability and visual hierarchy in the footer.
+**Action:** When creating keybinding footers, remove the background color from the parent container and instead apply background colors directly to the key and description parts. Use simple spacing between these combined elements instead of line separators like `│` to make them look individual UI components.
