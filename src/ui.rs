@@ -57,6 +57,17 @@ fn muted_style() -> Style {
     Style::default().fg(Color::DarkGray)
 }
 
+fn key_pill_style() -> Style {
+    Style::default()
+        .fg(Color::Black)
+        .bg(Color::Cyan)
+        .add_modifier(Modifier::BOLD)
+}
+
+fn desc_pill_style() -> Style {
+    Style::default().fg(Color::Black).bg(Color::Gray)
+}
+
 fn count_visual_lines(text: &str, max_width: u16) -> usize {
     let max_width = max_width as usize;
     if max_width == 0 {
@@ -447,12 +458,10 @@ fn draw_footer(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let mut spans = Vec::new();
-    let key_style = header_style();
-    let desc_style = muted_style();
 
     for (i, (key, desc)) in bindings.iter().enumerate() {
-        spans.push(Span::styled(format!(" {} ", key), key_style));
-        spans.push(Span::styled(format!(" {} ", desc), desc_style));
+        spans.push(Span::styled(format!(" {} ", key), key_pill_style()));
+        spans.push(Span::styled(format!(" {} ", desc), desc_pill_style()));
         if i < bindings.len() - 1 {
             spans.push(Span::raw("  "));
         }
