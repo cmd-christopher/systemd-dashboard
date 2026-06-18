@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2026-06-18 - Enhance active row contrast in Table
+**Learning:** Using `Modifier::REVERSED` for row selection highlights in TUI tables reverses foreground and background colors. When applied to rows with colored text, this creates an inconsistent 'rainbow' background effect, breaking visual hierarchy. Additionally, inactive text with `Color::DarkGray` becomes unreadable when the row highlight background is also `Color::DarkGray`.
+**Action:** Replaced `Modifier::REVERSED` with a solid `Color::DarkGray` background for selected rows. Updated `inactive_style` text foreground from `Color::DarkGray` to `Color::White` to ensure sufficient contrast against both the default terminal background and the new row highlight background.
