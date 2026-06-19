@@ -79,8 +79,11 @@ Systemd Timer Dashboard is a Rust terminal UI for monitoring and controlling use
 - Return fallback strings instead of bubbling errors for detail views, as in `fetch_timer_status` and `fetch_timer_logs` in `src/systemd.rs`.
 - Avoid panics: no `unwrap()` or `expect()` calls are present in `src/`.
 ## Logging
-- Error output is limited to a single top-level `println!("{:?}", err)` in `src/main.rs` after terminal restoration.
-- No structured logging crate is configured. Keep runtime noise low and route recoverable command failures into `App` state or returned `String` errors instead of adding ad hoc logging.
+- Structured logging is provided by the `tracing` ecosystem wired to a file-backed sink in `src/logging.rs` (via `tracing-appender` rolling daily files under `$XDG_DATA_HOME/systemd-dashboard/` or `$HOME/.local/share/systemd-dashboard/`).
+- Because the app takes over the terminal with an alternate screen, logs MUST NOT go to stdout/stderr during normal operation; all runtime output is routed to the file sink.
+- Use appropriate log levels: `ERROR` for failures, `WARN` for recoverable issues, `INFO` for important state changes (e.g. view transitions, toggle operations), `DEBUG` for per-operation details (e.g. command invocations, refresh cycles).
+- The top-level `println!` was removed from `src/main.rs`; loop errors are now logged via `error!` before terminal restoration.
+- Tests capture log output via a `TestWriter` + scoped `Dispatch` (see `build_test_dispatch` in `src/logging.rs`) so each test thread gets its own subscriber without disturbing a global default.
 ## Comments
 - Use short comments to mark major procedural phases, not to restate obvious code. Current examples include `// Terminal setup`, `// Create app and run it`, and `// Restore terminal` in `src/main.rs`, plus numbered extraction steps in `src/systemd.rs`.
 - Inline comments are used sparingly to label non-obvious constants, such as the percentage columns in `src/ui.rs`.

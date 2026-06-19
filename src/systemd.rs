@@ -2,6 +2,7 @@ use chrono::{Local, TimeZone, Utc};
 use serde::Deserialize;
 use std::collections::HashMap;
 use tokio::process::Command;
+use tracing::{debug, error, info, warn};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct RawTimerInfo {
@@ -24,6 +25,7 @@ pub struct TimerInfo {
 }
 
 pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
+    debug!("fetch_timers: invoking systemctl list-timers");
     // 1. Fetch JSON list for basic info
     let output = Command::new("systemctl")
         .args([
@@ -36,14 +38,26 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
         ])
         .output()
         .await
-        .map_err(|e| format!("Failed to execute systemctl: {}", e))?;
+        .map_err(|e| {
+            error!(error = %e, "fetch_timers: systemctl execution failed");
+            format!("Failed to execute systemctl: {}", e)
+        })?;
 
     if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        warn!(stderr = %stderr, "fetch_timers: systemctl returned non-zero status");
+        return Err(stderr);
     }
 
-    let raw_timers: Vec<RawTimerInfo> = serde_json::from_slice(&output.stdout)
-        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+    debug!(
+        stdout_len = output.stdout.len(),
+        "fetch_timers: parsing JSON"
+    );
+    let raw_timers: Vec<RawTimerInfo> = serde_json::from_slice(&output.stdout).map_err(|e| {
+        error!(error = %e, "fetch_timers: JSON parse failed");
+        format!("Failed to parse JSON: {}", e)
+    })?;
+    debug!(count = raw_timers.len(), "fetch_timers: parsed raw timers");
 
     let timer_units: Vec<String> = raw_timers.iter().map(|raw| raw.unit.clone()).collect();
     let (schedules, load_states) = fetch_timer_metadata(&timer_units).await;
@@ -97,6 +111,7 @@ pub async fn fetch_timers() -> Result<Vec<TimerInfo>, String> {
     // Sort alphabetically by unit name so timers maintain stable positions
     timers.sort_by(|a, b| a.unit.cmp(&b.unit));
 
+    debug!(count = timers.len(), "fetch_timers: assembled timer info");
     Ok(timers)
 }
 
@@ -200,8 +215,19 @@ async fn fetch_timer_metadata(
     let output = Command::new("systemctl").args(&args).output().await;
 
     match output {
-        Ok(o) if o.status.success() => extract_timer_metadata(&String::from_utf8_lossy(&o.stdout)),
-        _ => (HashMap::new(), HashMap::new()),
+        Ok(o) if o.status.success() => {
+            debug!(units = timer_units.len(), "fetch_timer_metadata: success");
+            extract_timer_metadata(&String::from_utf8_lossy(&o.stdout))
+        }
+        Ok(o) => {
+            warn!("fetch_timer_metadata: systemctl show failed, using empty metadata");
+            let _ = o;
+            (HashMap::new(), HashMap::new())
+        }
+        Err(e) => {
+            warn!(error = %e, "fetch_timer_metadata: execution failed, using empty metadata");
+            (HashMap::new(), HashMap::new())
+        }
     }
 }
 
@@ -316,39 +342,58 @@ fn dedupe_schedule_values(values: Vec<String>) -> String {
 }
 
 pub async fn fetch_timer_status(timer_unit: &str) -> Result<String, String> {
+    debug!(unit = %timer_unit, "fetch_timer_status: invoking systemctl show");
     let output = Command::new("systemctl")
         .args(["--user", "show", "--no-pager", "--", timer_unit])
         .output()
         .await;
 
     match output {
-        Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).to_string()),
-        Err(e) => Err(format!("Error: {}", e)),
+        Ok(o) => {
+            debug!(unit = %timer_unit, bytes = o.stdout.len(), "fetch_timer_status: success");
+            Ok(String::from_utf8_lossy(&o.stdout).to_string())
+        }
+        Err(e) => {
+            error!(unit = %timer_unit, error = %e, "fetch_timer_status: execution failed");
+            Err(format!("Error: {}", e))
+        }
     }
 }
 
 pub async fn fetch_timer_logs(service_unit: &str) -> Result<String, String> {
+    debug!(service = %service_unit, "fetch_timer_logs: invoking journalctl");
     let output = Command::new("journalctl")
         .args(["--user", "-u", service_unit, "-n", "50", "--no-pager"])
         .output()
         .await;
 
     match output {
-        Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).to_string()),
-        Err(e) => Err(format!("Error: {}", e)),
+        Ok(o) => {
+            debug!(service = %service_unit, bytes = o.stdout.len(), "fetch_timer_logs: success");
+            Ok(String::from_utf8_lossy(&o.stdout).to_string())
+        }
+        Err(e) => {
+            error!(service = %service_unit, error = %e, "fetch_timer_logs: execution failed");
+            Err(format!("Error: {}", e))
+        }
     }
 }
 
 pub async fn fetch_service_file_content(service_unit: &str) -> Result<String, String> {
+    debug!(service = %service_unit, "fetch_service_file_content: invoking systemctl cat");
     match Command::new("systemctl")
         .args(["--user", "cat", "--no-pager", "--", service_unit])
         .output()
         .await
     {
         Ok(output) => {
+            debug!(service = %service_unit, success = output.status.success(), "fetch_service_file_content: command completed");
             normalize_service_file_output(&output.stdout, &output.stderr, output.status.success())
         }
-        Err(error) => Err(format!("Service file unavailable: {}", error)),
+        Err(error) => {
+            error!(service = %service_unit, error = %error, "fetch_service_file_content: execution failed");
+            Err(format!("Service file unavailable: {}", error))
+        }
     }
 }
 
@@ -378,15 +423,22 @@ fn normalize_service_file_output(
 
 pub async fn toggle_timer(timer_unit: &str, start: bool) -> Result<(), String> {
     let action = if start { "start" } else { "stop" };
+    debug!(unit = %timer_unit, action = action, "toggle_timer: invoking systemctl");
     let output = Command::new("systemctl")
         .args(["--user", action, "--", timer_unit])
         .output()
         .await
-        .map_err(|e| format!("Failed to toggle timer: {}", e))?;
+        .map_err(|e| {
+            error!(unit = %timer_unit, action = action, error = %e, "toggle_timer: execution failed");
+            format!("Failed to toggle timer: {}", e)
+        })?;
 
     if !output.status.success() {
-        return Err(String::from_utf8_lossy(&output.stderr).to_string());
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+        error!(unit = %timer_unit, action = action, stderr = %stderr, "toggle_timer: systemctl returned non-zero");
+        return Err(stderr);
     }
+    info!(unit = %timer_unit, action = action, "toggle_timer: success");
     Ok(())
 }
 
@@ -566,6 +618,64 @@ mod tests {
                 " *-*-* 04:00:00 ".to_string()
             ]),
             "OnBootSec=5min, *-*-* 04:00:00"
+        );
+    }
+
+    // ---- Logging behavior tests ----
+    //
+    // The async fetch/toggle helpers shell out to `systemctl`/`journalctl`, so
+    // they can't be exercised in CI without a user systemd session. Instead we
+    // verify that the logging plumbing is wired up correctly by capturing log
+    // output through a test subscriber and confirming structured fields appear.
+
+    fn with_captured_logs<F: FnOnce()>(run: F) -> String {
+        let writer = crate::logging::TestWriter::new();
+        let dispatch = crate::logging::build_test_dispatch(writer.clone());
+        let _guard = tracing::dispatcher::set_default(&dispatch);
+        run();
+        writer.snapshot()
+    }
+
+    #[test]
+    fn tracing_macro_captures_structured_fields() {
+        let output = with_captured_logs(|| {
+            tracing::info!(
+                unit = "fixture.timer",
+                action = "start",
+                "toggle_timer: success"
+            );
+        });
+        assert!(
+            output.contains("toggle_timer: success"),
+            "output: {}",
+            output
+        );
+        assert!(output.contains("fixture.timer"), "output: {}", output);
+    }
+
+    #[test]
+    fn error_level_log_is_captured() {
+        let output = with_captured_logs(|| {
+            tracing::error!(error = "boom", "fetch_timers: systemctl execution failed");
+        });
+        assert!(output.contains("ERROR"), "output: {}", output);
+        assert!(
+            output.contains("systemctl execution failed"),
+            "output: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn warn_level_log_is_captured() {
+        let output = with_captured_logs(|| {
+            tracing::warn!("fetch_timer_metadata: execution failed, using empty metadata");
+        });
+        assert!(output.contains("WARN"), "output: {}", output);
+        assert!(
+            output.contains("using empty metadata"),
+            "output: {}",
+            output
         );
     }
 }

@@ -1,4 +1,5 @@
 use crate::systemd::TimerInfo;
+use tracing::{debug, info};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ViewMode {
@@ -95,6 +96,7 @@ impl App {
     }
 
     pub fn enter_detail(&mut self) {
+        info!(selected = self.selected_index, "view mode: list -> detail");
         self.mode = ViewMode::Detail;
         self.detail_focus = DetailPaneFocus::Top;
         self.detail_content_mode = DetailContentMode::Logs;
@@ -104,6 +106,7 @@ impl App {
     }
 
     pub fn exit_detail(&mut self) {
+        info!("view mode: detail -> list");
         self.mode = ViewMode::List;
         self.detail_status.clear();
         self.detail_logs.clear();
@@ -116,15 +119,27 @@ impl App {
 
     pub fn toggle_detail_focus(&mut self) {
         self.detail_focus = match self.detail_focus {
-            DetailPaneFocus::Top => DetailPaneFocus::Bottom,
-            DetailPaneFocus::Bottom => DetailPaneFocus::Top,
+            DetailPaneFocus::Top => {
+                debug!("detail focus: top -> bottom");
+                DetailPaneFocus::Bottom
+            }
+            DetailPaneFocus::Bottom => {
+                debug!("detail focus: bottom -> top");
+                DetailPaneFocus::Top
+            }
         };
     }
 
     pub fn select_next_detail_content(&mut self) {
         self.detail_content_mode = match self.detail_content_mode {
-            DetailContentMode::Logs => DetailContentMode::ServiceFile,
-            DetailContentMode::ServiceFile => DetailContentMode::Logs,
+            DetailContentMode::Logs => {
+                debug!("detail content: logs -> service_file");
+                DetailContentMode::ServiceFile
+            }
+            DetailContentMode::ServiceFile => {
+                debug!("detail content: service_file -> logs");
+                DetailContentMode::Logs
+            }
         };
     }
 
@@ -155,6 +170,10 @@ impl App {
     /// If the previously selected timer is no longer in the list, the index
     /// is clamped to the last valid position.
     pub fn replace_timers(&mut self, new_timers: Vec<TimerInfo>) {
+        debug!(
+            incoming = new_timers.len(),
+            "replace_timers: updating timer list"
+        );
         let selected_unit = self.selected_timer().map(|t| t.unit.clone());
         self.timers = new_timers;
         if self.timers.is_empty() {
@@ -620,5 +639,104 @@ mod tests {
 
         assert_eq!(app.selected_index, 0);
         assert!(app.timers.is_empty());
+    }
+
+    // ---- Logging behavior tests ----
+
+    fn with_captured_logs<F: FnOnce()>(run: F) -> String {
+        let writer = crate::logging::TestWriter::new();
+        let dispatch = crate::logging::build_test_dispatch(writer.clone());
+        let _guard = tracing::dispatcher::set_default(&dispatch);
+        run();
+        writer.snapshot()
+    }
+
+    #[test]
+    fn enter_detail_emits_info_log() {
+        let output = with_captured_logs(|| {
+            let mut app = App::new();
+            app.enter_detail();
+        });
+        assert!(
+            output.contains("view mode: list -> detail"),
+            "missing transition log: {}",
+            output
+        );
+        assert!(output.contains("INFO"), "output: {}", output);
+    }
+
+    #[test]
+    fn exit_detail_emits_info_log() {
+        let output = with_captured_logs(|| {
+            let mut app = App::new();
+            app.enter_detail();
+            app.exit_detail();
+        });
+        assert!(
+            output.contains("view mode: detail -> list"),
+            "missing transition log: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn toggle_detail_focus_emits_debug_logs() {
+        let output = with_captured_logs(|| {
+            let mut app = App::new();
+            app.toggle_detail_focus();
+            app.toggle_detail_focus();
+        });
+        assert!(output.contains("top -> bottom"), "output: {}", output);
+        assert!(output.contains("bottom -> top"), "output: {}", output);
+    }
+
+    #[test]
+    fn select_next_detail_content_emits_debug_logs() {
+        let output = with_captured_logs(|| {
+            let mut app = App::new();
+            app.select_next_detail_content();
+            app.select_next_detail_content();
+        });
+        assert!(
+            output.contains("logs -> service_file"),
+            "output: {}",
+            output
+        );
+        assert!(
+            output.contains("service_file -> logs"),
+            "output: {}",
+            output
+        );
+    }
+
+    #[test]
+    fn replace_timers_emits_debug_log_with_count() {
+        let output = with_captured_logs(|| {
+            let mut app = App::new();
+            app.replace_timers(vec![
+                TimerInfo {
+                    unit: "a.timer".into(),
+                    activates: String::new(),
+                    next_abs: String::new(),
+                    last_abs: String::new(),
+                    next_rel: String::new(),
+                    last_rel: String::new(),
+                    status: String::new(),
+                    schedule: String::new(),
+                },
+                TimerInfo {
+                    unit: "b.timer".into(),
+                    activates: String::new(),
+                    next_abs: String::new(),
+                    last_abs: String::new(),
+                    next_rel: String::new(),
+                    last_rel: String::new(),
+                    status: String::new(),
+                    schedule: String::new(),
+                },
+            ]);
+        });
+        assert!(output.contains("replace_timers"), "output: {}", output);
+        assert!(output.contains("incoming"), "output: {}", output);
     }
 }
