@@ -83,3 +83,6 @@
 ## 2024-05-31 - Add Refresh Shortcut key
 **Learning:** Adding a generic refresh `r` keybinding to the list and detail views significantly improves the user experience by providing an easy, discoverable way to reload timer data manually, eliminating the need to wait for automatic refreshes or restart the application. This aligns with standard TUI patterns where 'r' is a common reload/refresh shortcut.
 **Action:** Always provide manual refresh keybindings (e.g., 'r') for views that display dynamic or system state data to improve user control.
+## 2024-05-24 - Contextual keybinding footer with styled visual pills
+**Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps dynamically guides user actions. Formatting these using styled visual pills by bridging the background colors of the key and its description improves scanability and aesthetics.
+**Action:** Always provide an unobtrusive, contextual keybinding footer in TUI apps. Format these using styled visual pills.
