@@ -958,4 +958,374 @@ mod tests {
         let child3 = centered_rect(50, 50, parent2);
         assert_eq!(child3, Rect::new(50, 25, 100, 50));
     }
+
+    // ---- Additional coverage for uncovered branches ----
+
+    #[test]
+    fn test_count_visual_lines_non_ascii() {
+        // Exercises the word.is_ascii() == false branch (chars().count())
+        // "héllo" has 5 chars but > 1 byte; with max_width=10 it fits on one line.
+        assert_eq!(count_visual_lines("héllo", 10), 1);
+        // Unicode-heavy line with wrapping
+        assert_eq!(count_visual_lines("🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥", 5), 11 / 5 + (if 11 % 5 > 0 {1} else {0}));
+    }
+
+    #[test]
+    fn test_count_visual_lines_non_ascii_long_word() {
+        // Long non-ASCII word that exceeds max_width -> full_lines branch
+        let word = "🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥";
+        // 20 fire emojis, max_width=5 -> 20/5=4 full lines, remainder 0
+        assert_eq!(count_visual_lines(word, 5), 4);
+    }
+
+    #[test]
+    fn test_draw_list_with_waiting_status() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "wait.timer".into(),
+            activates: "wait.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Waiting".into(),
+            schedule: "daily".into(),
+        });
+
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn test_draw_list_with_inactive_status() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "inactive.timer".into(),
+            activates: "inactive.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Inactive".into(),
+            schedule: "daily".into(),
+        });
+
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn test_draw_list_with_unknown_status() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "weird.timer".into(),
+            activates: "weird.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Broken".into(),
+            schedule: "daily".into(),
+        });
+
+        terminal
+            .draw(|f| {
+                draw_list(f, &mut app, f.size());
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn test_draw_detail_auto_scroll_off() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::Logs;
+        app.auto_scroll = false;
+        app.detail_logs = "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8\nLine 9\nLine 10\nLine 11\nLine 12\nLine 13\nLine 14\nLine 15\nLine 16\nLine 17\nLine 18\nLine 19\nLine 20\nLine 21\nLine 22\nLine 23\nLine 24\nLine 25\n".into();
+
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("[Auto-scroll: Off]"));
+    }
+
+    #[test]
+    fn test_draw_detail_empty_logs() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::Logs;
+        app.detail_logs = "".into();
+
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("No logs found"));
+    }
+
+    #[test]
+    fn test_draw_detail_empty_service_file() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        app.detail_logs = "".into();
+
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("Service file is empty"));
+    }
+
+    #[test]
+    fn test_draw_detail_no_entries_marker() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::Logs;
+        app.detail_logs = "-- No entries --".into();
+
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(content.contains("No logs found"));
+    }
+
+    #[test]
+    fn test_draw_detail_scrollbar_rendered() {
+        // When detail_max_scroll > 0 and logs aren't empty, the scrollbar is rendered
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::Logs;
+        // Lots of lines to ensure detail_max_scroll > 0 after render
+        app.detail_logs = "line\n".repeat(100);
+
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        // After render, detail_max_scroll should be > 0
+        assert!(app.detail_max_scroll > 0);
+    }
+
+    #[test]
+    fn test_draw_detail_bottom_focus_inactive_top() {
+        let backend = TestBackend::new(80, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.timers.push(TimerInfo {
+            unit: "test.timer".into(),
+            activates: "test.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Active".into(),
+            schedule: "daily".into(),
+        });
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_logs = "some log\n".repeat(30);
+
+        terminal
+            .draw(|f| {
+                draw_detail(f, &mut app, f.size());
+            })
+            .unwrap();
+    }
+
+    #[test]
+    fn test_draw_footer_detail_no_timer_selected() {
+        let backend = TestBackend::new(200, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.mode = ViewMode::Detail;
+        app.detail_focus = DetailPaneFocus::Top;
+        // No timers -> toggle_desc = "Toggle Timer"
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(
+            content.contains("Toggle Timer"),
+            "expected 'Toggle Timer' in: {}",
+            content
+        );
+    }
+
+    #[test]
+    fn test_draw_footer_list_start_timer() {
+        let backend = TestBackend::new(200, 24);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let mut app = App::new();
+        app.mode = ViewMode::List;
+        app.timers.push(TimerInfo {
+            unit: "inactive.timer".into(),
+            activates: "inactive.service".into(),
+            next_abs: "n/a".into(),
+            last_abs: "n/a".into(),
+            next_rel: "n/a".into(),
+            last_rel: "n/a".into(),
+            status: "Inactive".into(),
+            schedule: "daily".into(),
+        });
+
+        terminal
+            .draw(|f| {
+                draw_footer(f, &mut app, f.size());
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let content = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer.get(x, y).symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        assert!(
+            content.contains("Start Timer"),
+            "expected 'Start Timer' in: {}",
+            content
+        );
+    }
 }

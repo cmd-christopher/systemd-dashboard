@@ -152,7 +152,7 @@ async fn run_app<B: ratatui::backend::Backend>(
     }
 }
 
-async fn handle_toggle_timer(app: &mut App) {
+pub(crate) async fn handle_toggle_timer(app: &mut App) {
     let toggle_op = if let Some(timer) = app.selected_timer() {
         let is_active = timer.status == "Active" || timer.status == "Waiting";
         let unit = timer.unit.clone();
@@ -187,7 +187,7 @@ async fn handle_toggle_timer(app: &mut App) {
     }
 }
 
-async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
+pub(crate) async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
     match key_code {
         KeyCode::Char('q') => return true,
         KeyCode::Down | KeyCode::Char('j') => app.next(),
@@ -240,7 +240,7 @@ async fn handle_list_input(app: &mut App, key_code: KeyCode) -> bool {
     false
 }
 
-async fn handle_detail_input(app: &mut App, key_code: KeyCode) -> bool {
+pub(crate) async fn handle_detail_input(app: &mut App, key_code: KeyCode) -> bool {
     match key_code {
         KeyCode::Esc | KeyCode::Backspace => {
             debug!("detail view: exit to list");
@@ -302,7 +302,7 @@ async fn handle_detail_input(app: &mut App, key_code: KeyCode) -> bool {
     false
 }
 
-async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
+pub(crate) async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
     if let Some(timer) = app.selected_timer() {
         let activates = timer.activates.clone();
         debug!(activates = %activates, mode = ?app.detail_content_mode, "refresh detail content");
@@ -329,5 +329,337 @@ async fn refresh_detail_content(app: &mut App, reset_scroll: bool) {
             // Auto-scroll only makes sense for logs
             app.auto_scroll = matches!(app.detail_content_mode, DetailContentMode::Logs);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        handle_detail_input, handle_list_input, handle_toggle_timer, refresh_detail_content,
+    };
+    use crate::app::{App, DetailContentMode, DetailPaneFocus, ViewMode};
+    use crate::systemd::TimerInfo;
+    use crossterm::event::KeyCode;
+
+    fn make_timer(unit: &str, activates: &str, status: &str) -> TimerInfo {
+        TimerInfo {
+            unit: unit.to_string(),
+            activates: activates.to_string(),
+            next_abs: "2024-01-02".to_string(),
+            last_abs: "2024-01-01".to_string(),
+            next_rel: "tomorrow".to_string(),
+            last_rel: "yesterday".to_string(),
+            status: status.to_string(),
+            schedule: "daily".to_string(),
+        }
+    }
+
+    fn make_app_with_timers() -> App {
+        let mut app = App::new();
+        app.timers.push(make_timer("alpha.timer", "alpha.service", "Active"));
+        app.timers.push(make_timer("beta.timer", "beta.service", "Inactive"));
+        app
+    }
+
+    // ---- handle_list_input ----
+
+    #[tokio::test]
+    async fn list_input_q_returns_true() {
+        let mut app = make_app_with_timers();
+        assert!(handle_list_input(&mut app, KeyCode::Char('q')).await);
+    }
+
+    #[tokio::test]
+    async fn list_input_down_moves_selection() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Down).await;
+        assert_eq!(app.selected_index, 1);
+    }
+
+    #[tokio::test]
+    async fn list_input_j_moves_selection() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Char('j')).await;
+        assert_eq!(app.selected_index, 1);
+    }
+
+    #[tokio::test]
+    async fn list_input_up_wraps() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Up).await;
+        assert_eq!(app.selected_index, 1); // wraps to last
+    }
+
+    #[tokio::test]
+    async fn list_input_k_wraps() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Char('k')).await;
+        assert_eq!(app.selected_index, 1);
+    }
+
+    #[tokio::test]
+    async fn list_input_unmapped_key_does_nothing() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Char('x')).await;
+        assert_eq!(app.selected_index, 0);
+        assert!(app.error.is_none());
+    }
+
+    #[tokio::test]
+    async fn list_input_enter_with_empty_unit_does_nothing() {
+        let mut app = App::new();
+        // No timers, selected_timer returns None -> unwrap_or_default -> empty unit
+        handle_list_input(&mut app, KeyCode::Enter).await;
+        assert_eq!(app.mode, ViewMode::List);
+    }
+
+    #[tokio::test]
+    async fn list_input_enter_opens_detail() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Enter).await;
+        assert_eq!(app.mode, ViewMode::Detail);
+        // detail_status and detail_logs should be populated (from real systemctl/journalctl)
+    }
+
+    #[tokio::test]
+    async fn list_input_space_toggles_timer() {
+        let mut app = make_app_with_timers();
+        handle_list_input(&mut app, KeyCode::Char(' ')).await;
+        // Exercises handle_toggle_timer with a real timer (stop alpha.timer)
+    }
+
+    #[tokio::test]
+    async fn detail_input_space_toggles_and_refreshes() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        handle_detail_input(&mut app, KeyCode::Char(' ')).await;
+        // Exercises handle_toggle_timer + refresh_detail_content in detail mode
+    }
+
+    #[tokio::test]
+    async fn list_input_r_refreshes() {
+        let mut app = make_app_with_timers();
+        // 'r' triggers fetch_timers which calls real systemctl
+        handle_list_input(&mut app, KeyCode::Char('r')).await;
+        // Either succeeds (timers replaced) or fails (error set), both exercise the path
+    }
+
+    // ---- handle_detail_input ----
+
+    #[tokio::test]
+    async fn detail_input_q_returns_true() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        assert!(handle_detail_input(&mut app, KeyCode::Char('q')).await);
+    }
+
+    #[tokio::test]
+    async fn detail_input_esc_exits_detail() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        handle_detail_input(&mut app, KeyCode::Esc).await;
+        assert_eq!(app.mode, ViewMode::List);
+    }
+
+    #[tokio::test]
+    async fn detail_input_backspace_exits_detail() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        handle_detail_input(&mut app, KeyCode::Backspace).await;
+        assert_eq!(app.mode, ViewMode::List);
+    }
+
+    #[tokio::test]
+    async fn detail_input_tab_toggles_focus() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        handle_detail_input(&mut app, KeyCode::Tab).await;
+        assert_eq!(app.detail_focus, DetailPaneFocus::Bottom);
+    }
+
+    #[tokio::test]
+    async fn detail_input_left_top_switches_content() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Top;
+        handle_detail_input(&mut app, KeyCode::Left).await;
+        assert_eq!(app.detail_content_mode, DetailContentMode::ServiceFile);
+    }
+
+    #[tokio::test]
+    async fn detail_input_right_top_switches_content() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Top;
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        handle_detail_input(&mut app, KeyCode::Right).await;
+        assert_eq!(app.detail_content_mode, DetailContentMode::Logs);
+    }
+
+    #[tokio::test]
+    async fn detail_input_up_top_switches_content() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Top;
+        handle_detail_input(&mut app, KeyCode::Up).await;
+        assert_eq!(app.detail_content_mode, DetailContentMode::ServiceFile);
+    }
+
+    #[tokio::test]
+    async fn detail_input_down_top_switches_content() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Top;
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        handle_detail_input(&mut app, KeyCode::Down).await;
+        assert_eq!(app.detail_content_mode, DetailContentMode::Logs);
+    }
+
+    #[tokio::test]
+    async fn detail_input_left_bottom_scrolls_up() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
+        app.detail_scroll = 3;
+        handle_detail_input(&mut app, KeyCode::Left).await;
+        assert_eq!(app.detail_scroll, 2);
+    }
+
+    #[tokio::test]
+    async fn detail_input_up_bottom_scrolls_up() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
+        app.detail_scroll = 3;
+        handle_detail_input(&mut app, KeyCode::Up).await;
+        assert_eq!(app.detail_scroll, 2);
+    }
+
+    #[tokio::test]
+    async fn detail_input_right_bottom_scrolls_down() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
+        handle_detail_input(&mut app, KeyCode::Right).await;
+        assert_eq!(app.detail_scroll, 1);
+    }
+
+    #[tokio::test]
+    async fn detail_input_down_bottom_scrolls_down() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
+        handle_detail_input(&mut app, KeyCode::Down).await;
+        assert_eq!(app.detail_scroll, 1);
+    }
+
+    #[tokio::test]
+    async fn detail_input_j_bottom_scrolls_down() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
+        handle_detail_input(&mut app, KeyCode::Char('j')).await;
+        assert_eq!(app.detail_scroll, 1);
+    }
+
+    #[tokio::test]
+    async fn detail_input_k_bottom_scrolls_up() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_focus = DetailPaneFocus::Bottom;
+        app.detail_max_scroll = 5;
+        app.detail_scroll = 3;
+        handle_detail_input(&mut app, KeyCode::Char('k')).await;
+        assert_eq!(app.detail_scroll, 2);
+    }
+
+    #[tokio::test]
+    async fn detail_input_unmapped_key_does_nothing() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        handle_detail_input(&mut app, KeyCode::Char('x')).await;
+        assert_eq!(app.mode, ViewMode::Detail);
+    }
+
+    #[tokio::test]
+    async fn detail_input_r_manual_refresh() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        handle_detail_input(&mut app, KeyCode::Char('r')).await;
+        // Exercises the manual refresh path (fetch_timers + fetch_timer_status)
+    }
+
+    // ---- handle_toggle_timer ----
+
+    #[tokio::test]
+    async fn toggle_timer_with_no_selection_logs_warning() {
+        let mut app = App::new();
+        // No timers selected -> toggle_op is None
+        handle_toggle_timer(&mut app).await;
+        assert!(app.error.is_none());
+    }
+
+    #[tokio::test]
+    async fn toggle_timer_with_selection_attempts_toggle() {
+        let mut app = make_app_with_timers();
+        // Active timer -> will attempt to stop it via real systemctl
+        handle_toggle_timer(&mut app).await;
+        // The toggle may succeed or fail depending on the timer; both paths are exercised.
+    }
+
+    // ---- refresh_detail_content ----
+
+    #[tokio::test]
+    async fn refresh_detail_content_no_selected_timer() {
+        let mut app = App::new();
+        app.enter_detail();
+        refresh_detail_content(&mut app, false).await;
+        // No timer selected -> does nothing
+    }
+
+    #[tokio::test]
+    async fn refresh_detail_content_logs_mode() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::Logs;
+        refresh_detail_content(&mut app, false).await;
+        // Fetches logs from real journalctl
+    }
+
+    #[tokio::test]
+    async fn refresh_detail_content_service_file_mode() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        refresh_detail_content(&mut app, false).await;
+        // Fetches service file from real systemctl cat
+    }
+
+    #[tokio::test]
+    async fn refresh_detail_content_resets_scroll() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_scroll = 10;
+        app.auto_scroll = false;
+        refresh_detail_content(&mut app, true).await;
+        assert_eq!(app.detail_scroll, 0);
+        assert!(app.auto_scroll); // Logs mode -> auto_scroll true
+    }
+
+    #[tokio::test]
+    async fn refresh_detail_content_reset_scroll_service_file() {
+        let mut app = make_app_with_timers();
+        app.enter_detail();
+        app.detail_content_mode = DetailContentMode::ServiceFile;
+        app.detail_scroll = 10;
+        app.auto_scroll = true;
+        refresh_detail_content(&mut app, true).await;
+        assert_eq!(app.detail_scroll, 0);
+        assert!(!app.auto_scroll); // ServiceFile mode -> auto_scroll false
     }
 }

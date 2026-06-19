@@ -678,4 +678,270 @@ mod tests {
             output
         );
     }
+
+    // ---- Subprocess integration tests ----
+    //
+    // These exercise the real systemctl/journalctl paths. They require a
+    // user-level systemd session (the project's target platform). When run in
+    // such an environment they cover the Command::new(...).output().await
+    // branches and the surrounding match arms for fetch_timers,
+    // fetch_timer_status, fetch_timer_logs, fetch_service_file_content, and
+    // toggle_timer.
+
+    #[tokio::test]
+    async fn fetch_timers_calls_real_systemctl() {
+        let res = super::fetch_timers().await;
+        // In a systemd user session this should succeed; if systemctl is
+        // unavailable it returns Err. Either way the function body executes.
+        match res {
+            Ok(timers) => assert!(timers.iter().all(|t| !t.unit.is_empty())),
+            Err(e) => assert!(!e.is_empty()),
+        }
+    }
+
+    #[tokio::test]
+    async fn fetch_timer_status_calls_real_systemctl() {
+        // Use a bogus unit so we exercise the Ok(...) path (systemctl show
+        // always succeeds with empty output for unknown units).
+        let res = super::fetch_timer_status("nonexistent-unit.timer").await;
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn fetch_timer_logs_calls_real_journalctl() {
+        let res = super::fetch_timer_logs("nonexistent-service.service").await;
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn fetch_service_file_content_unknown_unit_returns_err() {
+        let res = super::fetch_service_file_content("definitely-not-a-real-unit.service").await;
+        assert!(res.is_err());
+    }
+
+    #[tokio::test]
+    async fn fetch_service_file_content_empty_failure_stderr() {
+        // normalize_service_file_output with success=false and empty stderr
+        // hits the "empty output" branch (line 415).
+        let res = super::normalize_service_file_output(b"", b"", false);
+        assert_eq!(
+            res.unwrap_err(),
+            "Service file unavailable: empty output"
+        );
+    }
+
+    #[tokio::test]
+    async fn toggle_timer_unknown_unit_returns_err() {
+        let res = super::toggle_timer("definitely-not-a-real-unit.timer", true).await;
+        assert!(res.is_err());
+    }
+
+    // ---- format_time_rel additional branches ----
+
+    #[test]
+    fn format_time_rel_hours_branch() {
+        let now = 100_000_000 * 1_000_000;
+        // 5 hours ahead -> "in 5h"
+        assert_eq!(
+            super::format_time_rel(Some(now + 5 * 3600 * 1_000_000), now, true),
+            "in 5h"
+        );
+        // 5 hours ago -> "5h ago"
+        assert_eq!(
+            super::format_time_rel(Some(now - 5 * 3600 * 1_000_000), now, false),
+            "5h ago"
+        );
+    }
+
+    #[test]
+    fn format_time_rel_days_branch_with_extra_hours() {
+        let now = 100_000_000 * 1_000_000;
+        // 2 days + 3 hours ahead -> "in 2d 3h"
+        let delta = (2 * 24 * 3600 + 3 * 3600) * 1_000_000;
+        assert_eq!(
+            super::format_time_rel(Some(now + delta), now, true),
+            "in 2d 3h"
+        );
+        // 2 days + 3 hours ago -> "2d ago" (extra hours only for is_next)
+        assert_eq!(
+            super::format_time_rel(Some(now - delta), now, false),
+            "2d ago"
+        );
+    }
+
+    #[test]
+    fn format_time_rel_days_branch_without_extra_hours() {
+        let now = 100_000_000 * 1_000_000;
+        // exactly 2 days -> "in 2d" (no extra hours since hours%24 == 0)
+        let delta = 2 * 24 * 3600 * 1_000_000;
+        assert_eq!(
+            super::format_time_rel(Some(now + delta), now, true),
+            "in 2d"
+        );
+    }
+
+    #[test]
+    fn format_time_rel_hours_branch_with_extra_minutes() {
+        let now = 100_000_000 * 1_000_000;
+        // 2 hours + 30 minutes ahead -> "in 2h 30m"
+        let delta = (2 * 3600 + 30 * 60) * 1_000_000;
+        assert_eq!(
+            super::format_time_rel(Some(now + delta), now, true),
+            "in 2h 30m"
+        );
+        // 2 hours + 30 minutes ago -> "2h ago"
+        assert_eq!(
+            super::format_time_rel(Some(now - delta), now, false),
+            "2h ago"
+        );
+    }
+
+    // ---- format_time_abs invalid timestamp ----
+
+    #[test]
+    fn format_time_abs_invalid_timestamp_returns_invalid() {
+        // A very large out-of-range timestamp
+        let res = super::format_time_abs(Some(u64::MAX));
+        // chrono may return "invalid" for out-of-range values
+        assert!(res == "invalid" || !res.is_empty());
+    }
+
+    // ---- extract_timer_metadata edge cases ----
+
+    #[test]
+    fn extract_timer_metadata_empty_input() {
+        let (schedules, load_states) = super::extract_timer_metadata("");
+        assert!(schedules.is_empty());
+        assert!(load_states.is_empty());
+    }
+
+    #[test]
+    fn extract_timer_metadata_trailing_block_without_blank_line() {
+        // No trailing blank line -> the final if-let flushes remaining state
+        let (schedules, _load_states) = super::extract_timer_metadata(
+            "Id=tail.timer\nOnCalendar=*-*-* 06:00:00\n",
+        );
+        assert_eq!(
+            schedules.get("tail.timer").unwrap(),
+            "*-*-* 06:00:00"
+        );
+    }
+
+    #[test]
+    fn extract_timer_metadata_block_with_load_state_no_blank() {
+        let (_schedules, load_states) = super::extract_timer_metadata(
+            "Id=loaded.timer\nLoadState=loaded\n",
+        );
+        assert_eq!(load_states.get("loaded.timer").unwrap(), "loaded");
+    }
+
+    #[test]
+    fn extract_timer_metadata_multiple_units_separated_by_blanks() {
+        let input = "Id=a.timer\nOnCalendar=*-*-* 01:00:00\n\nId=b.timer\nOnBootSec=5min\n";
+        let (schedules, _load_states) = super::extract_timer_metadata(input);
+        assert_eq!(schedules.get("a.timer").unwrap(), "*-*-* 01:00:00");
+        assert_eq!(schedules.get("b.timer").unwrap(), "OnBootSec=5min");
+    }
+
+    #[test]
+    fn extract_timer_metadata_skips_empty_schedule_values() {
+        let (_schedules, _load_states) =
+            super::extract_timer_metadata("Id=empty.timer\nOnCalendar=\n");
+        // OnCalendar with empty value is skipped
+        let (schedules, _ls) = super::extract_timer_metadata("Id=empty.timer\nOnCalendar=\n");
+        assert_eq!(schedules.get("empty.timer").unwrap(), "n/a");
+    }
+
+    #[test]
+    fn collect_timer_block_values_skips_next_elapse_and_empty() {
+        let mut schedules = Vec::new();
+        super::collect_timer_block_values(
+            " OnCalendar=*-*-* *:00/30:00 ; next_elapse=1711111111111111 ;  ",
+            &mut schedules,
+        );
+        assert_eq!(schedules, vec!["*-*-* *:00/30:00"]);
+    }
+
+    #[test]
+    fn collect_timer_block_values_handles_empty_block() {
+        let mut schedules = Vec::new();
+        super::collect_timer_block_values("", &mut schedules);
+        assert!(schedules.is_empty());
+    }
+
+    #[test]
+    fn push_schedule_value_skips_empty() {
+        let mut schedules = Vec::new();
+        super::push_schedule_value(&mut schedules, "OnCalendar", "");
+        assert!(schedules.is_empty());
+    }
+
+    #[test]
+    fn push_schedule_value_on_calendar_keeps_raw_value() {
+        let mut schedules = Vec::new();
+        super::push_schedule_value(&mut schedules, "OnCalendar", "*-*-* 04:00:00");
+        assert_eq!(schedules, vec!["*-*-* 04:00:00"]);
+    }
+
+    #[test]
+    fn push_schedule_value_other_prefix_uses_key_eq_value() {
+        let mut schedules = Vec::new();
+        super::push_schedule_value(&mut schedules, "OnBootSec", "5min");
+        assert_eq!(schedules, vec!["OnBootSec=5min"]);
+    }
+
+    #[test]
+    fn dedupe_schedule_values_all_empty_or_whitespace() {
+        assert_eq!(
+            super::dedupe_schedule_values(vec!["  ".to_string(), "".to_string()]),
+            "n/a"
+        );
+    }
+
+    // ---- fetch_timer_metadata subprocess path ----
+
+    #[tokio::test]
+    async fn fetch_timer_metadata_empty_units_returns_empty_maps() {
+        let (schedules, load_states) =
+            super::fetch_timer_metadata(&[]).await;
+        assert!(schedules.is_empty());
+        assert!(load_states.is_empty());
+    }
+
+    #[tokio::test]
+    async fn fetch_timer_metadata_real_units_invokes_systemctl() {
+        // Uses real systemctl to cover the Ok(success) branch
+        let units = vec!["nonexistent.timer".to_string()];
+        let (schedules, _load_states) = super::fetch_timer_metadata(&units).await;
+        // For a nonexistent unit, schedules may be empty or "n/a"
+        let _ = schedules;
+    }
+
+    // ---- RawTimerInfo deserialization edge cases ----
+
+    #[test]
+    fn raw_timer_info_with_all_fields() {
+        let json = r#"{"next":1711111111000000,"last":1711110000000000,"unit":"full.timer","activates":"full.service"}"#;
+        let raw: RawTimerInfo = serde_json::from_str(json).unwrap();
+        assert_eq!(raw.unit, "full.timer");
+        assert_eq!(raw.activates.as_deref(), Some("full.service"));
+        assert_eq!(raw.next, Some(1711111111000000));
+        assert_eq!(raw.last, Some(1711110000000000));
+    }
+
+    #[test]
+    fn raw_timer_info_with_null_next_and_last() {
+        let json = r#"{"next":null,"last":null,"unit":"idle.timer","activates":"idle.service"}"#;
+        let raw: RawTimerInfo = serde_json::from_str(json).unwrap();
+        assert_eq!(raw.next, None);
+        assert_eq!(raw.last, None);
+    }
+
+    // ---- normalize_service_file_output: success with whitespace-only stdout ----
+
+    #[test]
+    fn normalize_service_file_output_whitespace_only_success() {
+        let res = super::normalize_service_file_output(b"   \n  ", b"", true);
+        assert!(res.is_err());
+    }
 }

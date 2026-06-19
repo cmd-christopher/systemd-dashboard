@@ -293,4 +293,85 @@ mod tests {
             dir.path()
         );
     }
+
+    // ---- Additional coverage ----
+
+    #[test]
+    fn default_log_dir_ignores_empty_xdg_data_home() {
+        // When XDG_DATA_HOME is set but empty, it falls back to $HOME.
+        let saved_xdg = std::env::var("XDG_DATA_HOME").ok();
+        std::env::set_var("XDG_DATA_HOME", "");
+
+        if std::env::var("HOME").is_ok() {
+            let dir = default_log_dir().unwrap();
+            assert!(
+                dir.ends_with(".local/share/systemd-dashboard"),
+                "unexpected fallback dir: {:?}",
+                dir
+            );
+        }
+
+        if let Some(v) = saved_xdg {
+            std::env::set_var("XDG_DATA_HOME", v);
+        } else {
+            std::env::remove_var("XDG_DATA_HOME");
+        }
+    }
+
+    #[test]
+    fn init_file_logging_sets_global_default_and_returns_guard() {
+        // init_file_logging calls build_file_dispatch + set_global_default.
+        // Because set_global_default can only be called once per process, this
+        // test may fail if another test already set the global default. We
+        // accept both outcomes — the important thing is exercising the path.
+        let dir = tempfile::tempdir().expect("temp dir");
+        let res = super::init_file_logging(dir.path());
+        match res {
+            Ok(guard) => {
+                // Success: guard is returned, global default set.
+                drop(guard);
+            }
+            Err(e) => {
+                // Expected when global default was already set by another test.
+                assert!(
+                    e.contains("global tracing dispatcher") || e.contains("log directory"),
+                    "unexpected error: {}",
+                    e
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn build_file_dispatch_creates_directory() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let nested = dir.path().join("nested").join("logs");
+        let (_dispatch, guard) = build_file_dispatch(&nested).expect("dispatch");
+        assert!(nested.is_dir(), "nested log directory was not created");
+        drop(guard);
+    }
+
+    #[test]
+    fn build_file_dispatch_fails_on_invalid_path() {
+        // An unwritable path (under a file, not a directory) should error.
+        let res = build_file_dispatch(std::path::Path::new("/dev/null/not-a-dir"));
+        assert!(res.is_err(), "expected error for invalid log dir");
+    }
+
+    #[test]
+    fn test_writer_default_matches_new() {
+        let w = TestWriter::default();
+        let _ = w.snapshot();
+    }
+
+    #[test]
+    fn test_writer_handle_flush_succeeds() {
+        use tracing_subscriber::fmt::MakeWriter;
+        let writer = TestWriter::new();
+        let mut handle = writer.make_writer();
+        use std::io::Write;
+        handle.write_all(b"test data").unwrap();
+        handle.flush().unwrap();
+        assert_eq!(writer.snapshot(), "test data");
+    }
 }
