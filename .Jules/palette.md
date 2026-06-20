@@ -86,3 +86,6 @@
 ## 2024-05-24 - Contextual keybinding footer with styled visual pills
 **Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps dynamically guides user actions. Formatting these using styled visual pills by bridging the background colors of the key and its description improves scanability and aesthetics.
 **Action:** Always provide an unobtrusive, contextual keybinding footer in TUI apps. Format these using styled visual pills.
+## 2025-06-01 - Title Contrast Cascading in Ratatui
+**Learning:** Block::title text implicitly inherits the border_style color. Applying a low-contrast border color (e.g., Color::Red for errors) directly to a Block causes the title text to also be rendered in that color, making it hard to read against dark backgrounds.
+**Action:** Always explicitly style .title() using Line::from and Spans to ensure the title text remains high-contrast (e.g., Color::White) against dark terminal backgrounds when a colored border is applied.

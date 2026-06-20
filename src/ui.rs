@@ -26,7 +26,7 @@ fn header_style() -> Style {
 fn selected_style() -> Style {
     Style::default()
         .add_modifier(Modifier::BOLD)
-        .add_modifier(Modifier::REVERSED)
+        .bg(Color::DarkGray)
 }
 
 fn active_style() -> Style {
@@ -36,7 +36,7 @@ fn active_style() -> Style {
 }
 
 fn inactive_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::White)
 }
 
 fn waiting_style() -> Style {
@@ -54,7 +54,7 @@ fn border_style() -> Style {
 }
 
 fn muted_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::Gray)
 }
 
 fn key_pill_style() -> Style {
@@ -398,8 +398,11 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .style(warning_style())
-        .title(" Error (Press any key to dismiss) ");
+        .border_style(warning_style())
+        .title(Line::from(vec![Span::styled(
+            " Error (Press any key to dismiss) ",
+            Style::default().fg(Color::White),
+        )]));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
