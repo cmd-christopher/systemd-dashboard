@@ -25,8 +25,8 @@ fn header_style() -> Style {
 
 fn selected_style() -> Style {
     Style::default()
+        .bg(Color::DarkGray)
         .add_modifier(Modifier::BOLD)
-        .add_modifier(Modifier::REVERSED)
 }
 
 fn active_style() -> Style {
