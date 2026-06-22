@@ -86,3 +86,6 @@
 ## 2024-05-24 - Contextual keybinding footer with styled visual pills
 **Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps dynamically guides user actions. Formatting these using styled visual pills by bridging the background colors of the key and its description improves scanability and aesthetics.
 **Action:** Always provide an unobtrusive, contextual keybinding footer in TUI apps. Format these using styled visual pills.
+## 2025-06-22 - Consistent Highlight Contrast with Modifier::REVERSED
+**Learning:** The prompt states: Using `Modifier::REVERSED` for row selection highlights in tables with colored text creates an inconsistent 'rainbow' background effect. To maintain visual hierarchy, replace `Modifier::REVERSED` with a solid background color (e.g., `Color::DarkGray`) for selected rows. Also, 'Inactive' text should use `Color::White` instead of `Color::DarkGray` to avoid contrast issues when the row is highlighted.
+**Action:** Replaced `Modifier::REVERSED` with `bg(Color::DarkGray)` in `selected_style()` and updated `inactive_style()` to use `Color::White` instead of `Color::DarkGray`.
