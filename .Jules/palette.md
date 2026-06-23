@@ -86,3 +86,6 @@
 ## 2024-05-24 - Contextual keybinding footer with styled visual pills
 **Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps dynamically guides user actions. Formatting these using styled visual pills by bridging the background colors of the key and its description improves scanability and aesthetics.
 **Action:** Always provide an unobtrusive, contextual keybinding footer in TUI apps. Format these using styled visual pills.
+## 2026-06-23 - Override foreground color in Ratatui Table highlight styles
+**Learning:** In Ratatui TUI applications, applying a solid background color to indicate row selection in tables without updating the text foreground can cause elements to become unreadable. Specifying a foreground color (e.g., `Color::White`) in `highlight_style` unconditionally overrides all individual cell foreground colors within the selected row, resolving contrast issues and removing the need for `Modifier::REVERSED` which causes rainbow background artifacts.
+**Action:** Always include a high-contrast foreground color (`fg(Color::White)`) along with the background color in Ratatui Table `highlight_style` settings to guarantee text readability and override mixed cell colors.
