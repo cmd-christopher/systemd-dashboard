@@ -26,7 +26,7 @@ fn header_style() -> Style {
 fn selected_style() -> Style {
     Style::default()
         .add_modifier(Modifier::BOLD)
-        .add_modifier(Modifier::REVERSED)
+        .bg(Color::DarkGray)
 }
 
 fn active_style() -> Style {
@@ -36,12 +36,12 @@ fn active_style() -> Style {
 }
 
 fn inactive_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::White)
 }
 
 fn waiting_style() -> Style {
     Style::default()
-        .fg(Color::Blue)
+        .fg(Color::Cyan)
         .add_modifier(Modifier::BOLD)
 }
 
@@ -54,7 +54,7 @@ fn border_style() -> Style {
 }
 
 fn muted_style() -> Style {
-    Style::default().fg(Color::DarkGray)
+    Style::default().fg(Color::Gray)
 }
 
 fn key_pill_style() -> Style {
