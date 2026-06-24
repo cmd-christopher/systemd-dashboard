@@ -86,3 +86,6 @@
 ## 2024-05-24 - Contextual keybinding footer with styled visual pills
 **Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps dynamically guides user actions. Formatting these using styled visual pills by bridging the background colors of the key and its description improves scanability and aesthetics.
 **Action:** Always provide an unobtrusive, contextual keybinding footer in TUI apps. Format these using styled visual pills.
+## 2026-06-24 - Enhance table and empty state contrast
+**Learning:** Standardizing row background highlights (using Color::DarkGray) and ensuring high-contrast foreground text (Color::White, Color::Cyan, Color::Gray) prevents the 'rainbow' background effect and ensures accessibility across all UI states.
+**Action:** When defining styles for TUI components, prefer solid background colors for highlights and always verify that text colors like 'Waiting' or 'Inactive' have sufficient contrast against both default and highlighted backgrounds.
