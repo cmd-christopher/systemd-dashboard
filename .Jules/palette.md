@@ -86,3 +86,6 @@
 ## 2024-05-24 - Contextual keybinding footer with styled visual pills
 **Learning:** Providing an unobtrusive, contextual keybinding footer in TUI apps dynamically guides user actions. Formatting these using styled visual pills by bridging the background colors of the key and its description improves scanability and aesthetics.
 **Action:** Always provide an unobtrusive, contextual keybinding footer in TUI apps. Format these using styled visual pills.
+## 2024-06-26 - Contrast for 'Waiting' Status Text
+**Learning:** Using `Color::Blue` for text foregrounds (like 'Waiting' states) can result in poor contrast and readability on dark terminal backgrounds or dark row selection highlights (e.g. `Color::DarkGray`). This violates accessibility guidelines by being too difficult to read for some users.
+**Action:** When styling text for specific states like 'Waiting', prefer lighter shades like `Color::Cyan` to ensure high contrast against typical terminal backgrounds and highlighted states.
