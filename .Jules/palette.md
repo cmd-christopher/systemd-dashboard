@@ -89,3 +89,6 @@
 ## 2024-06-27 - Table Contrast with Highlight
 **Learning:** Using `Modifier::REVERSED` for row highlight and keeping text `Color::DarkGray` or `Color::Blue` creates contrast issues and visual jitter with a multi-colored background on row selection.
 **Action:** When styling selectable table rows, replace `Modifier::REVERSED` with a solid background like `.bg(Color::DarkGray)`, and update inactive/waiting text styles to `Color::White` and `Color::Cyan` respectively to ensure high contrast for all cell texts against both default and selected row background colors.
+## 2024-06-28 - Improve contrast of selected rows and block titles
+**Learning:** In terminal UI frameworks like Ratatui, highlight styles (e.g., for selected rows) that only set a background color can cause internal text using the same or similar colors (like `Color::DarkGray` for inactive states) to become invisible due to lack of contrast. Also, block titles implicitly inherit block border styles unless explicitly styled, which can lead to low contrast titles against dark terminal backgrounds.
+**Action:** Unconditionally set a high-contrast foreground color (e.g., `.fg(Color::White)`) on highlight styles to ensure text visibility against the selection background. Explicitly style `Block::title` using `Line::from(...).style(...)` to guarantee high contrast regardless of border color.
