@@ -27,6 +27,7 @@ fn selected_style() -> Style {
     Style::default()
         .add_modifier(Modifier::BOLD)
         .bg(Color::DarkGray)
+        .fg(Color::White)
 }
 
 fn active_style() -> Style {
@@ -171,7 +172,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(border_style())
-                    .title(" Systemd Timers "),
+                    .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
             );
         f.render_widget(empty_para, area);
         return;
@@ -192,7 +193,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(border_style())
-            .title(" Systemd Timers "),
+            .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
     )
     .highlight_style(selected_style())
     .highlight_symbol("▶  ");
@@ -399,7 +400,7 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let block = Block::default()
         .borders(Borders::ALL)
         .style(warning_style())
-        .title(" Error (Press any key to dismiss) ");
+        .title(Line::from(" Error (Press any key to dismiss) ").style(Style::default().fg(Color::White)));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
