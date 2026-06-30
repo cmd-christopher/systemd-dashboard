@@ -89,3 +89,7 @@
 ## 2024-06-27 - Table Contrast with Highlight
 **Learning:** Using `Modifier::REVERSED` for row highlight and keeping text `Color::DarkGray` or `Color::Blue` creates contrast issues and visual jitter with a multi-colored background on row selection.
 **Action:** When styling selectable table rows, replace `Modifier::REVERSED` with a solid background like `.bg(Color::DarkGray)`, and update inactive/waiting text styles to `Color::White` and `Color::Cyan` respectively to ensure high contrast for all cell texts against both default and selected row background colors.
+
+## 2025-06-30 - Explicit High-Contrast Titles
+**Learning:** Block::title text implicitly inherits the border_style color in Ratatui. When borders use low-contrast colors (like Color::DarkGray for inactive panes) or alert colors (like Color::Red for errors), the title text becomes difficult to read against dark backgrounds, violating accessibility principles.
+**Action:** Always explicitly style .title() strings or Lines to a high-contrast foreground (e.g., Color::White) to ensure text readability is decoupled from border aesthetics.
