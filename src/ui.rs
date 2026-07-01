@@ -171,7 +171,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(border_style())
-                    .title(" Systemd Timers "),
+                    .title(Line::from(vec![Span::styled(" Systemd Timers ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD))])),
             );
         f.render_widget(empty_para, area);
         return;
@@ -192,7 +192,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(border_style())
-            .title(" Systemd Timers "),
+            .title(Line::from(vec![Span::styled(" Systemd Timers ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD))])),
     )
     .highlight_style(selected_style())
     .highlight_symbol("▶  ");
@@ -398,8 +398,8 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .style(warning_style())
-        .title(" Error (Press any key to dismiss) ");
+        .border_style(warning_style())
+        .title(Line::from(vec![Span::styled(" Error (Press any key to dismiss) ", Style::default().fg(Color::White).add_modifier(Modifier::BOLD))]));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
