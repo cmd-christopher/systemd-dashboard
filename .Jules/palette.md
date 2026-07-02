@@ -89,3 +89,7 @@
 ## 2024-06-27 - Table Contrast with Highlight
 **Learning:** Using `Modifier::REVERSED` for row highlight and keeping text `Color::DarkGray` or `Color::Blue` creates contrast issues and visual jitter with a multi-colored background on row selection.
 **Action:** When styling selectable table rows, replace `Modifier::REVERSED` with a solid background like `.bg(Color::DarkGray)`, and update inactive/waiting text styles to `Color::White` and `Color::Cyan` respectively to ensure high contrast for all cell texts against both default and selected row background colors.
+
+## 2025-06-25 - Explicit title styling for better contrast
+**Learning:** Block::title text implicitly inherits the border_style color. To prevent low-contrast borders (e.g., Color::Red for errors or Color::DarkGray for inactive panes) from cascading to the title, explicitly style .title() using Line::from with a blanket style or multiple Span's.
+**Action:** Always style Block titles explicitly using `Span::styled` or `Line::from` with a blanket style (e.g., `Color::White`) to ensure high contrast against dark terminal backgrounds and prevent unintended color inheritance from the border.

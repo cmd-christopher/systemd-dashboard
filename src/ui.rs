@@ -171,7 +171,10 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(border_style())
-                    .title(" Systemd Timers "),
+                    .title(Span::styled(
+                        " Systemd Timers ",
+                        Style::default().fg(Color::White),
+                    )),
             );
         f.render_widget(empty_para, area);
         return;
@@ -192,7 +195,10 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(border_style())
-            .title(" Systemd Timers "),
+            .title(Span::styled(
+                " Systemd Timers ",
+                Style::default().fg(Color::White),
+            )),
     )
     .highlight_style(selected_style())
     .highlight_symbol("▶  ");
@@ -275,16 +281,16 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             inactive_border
         })
         .title(Line::from(vec![
-            Span::raw(top_prefix),
+            Span::styled(top_prefix, Style::default().fg(Color::White)),
             Span::styled(timer, emphasis_style()),
-            Span::raw(" "),
+            Span::styled(" ", Style::default().fg(Color::White)),
         ]))
         .title(Line::from(vec![
-            Span::raw(controls_prefix),
+            Span::styled(controls_prefix, Style::default().fg(Color::White)),
             Span::styled(logs_label, logs_style),
-            Span::raw(" | "),
+            Span::styled(" | ", Style::default().fg(Color::White)),
             Span::styled(service_file_label, service_file_style),
-            Span::raw(controls_suffix),
+            Span::styled(controls_suffix, Style::default().fg(Color::White)),
         ]));
     let status_para = Paragraph::new(status_text)
         .block(status_block)
@@ -300,17 +306,20 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         DetailContentMode::Logs => {
             if app.auto_scroll {
                 Line::from(vec![
-                    Span::raw(format!("{}Logs ", bottom_prefix)),
+                    Span::styled(format!("{}Logs ", bottom_prefix), Style::default().fg(Color::White)),
                     Span::styled("[Auto-scroll: On] ", active_style()),
                 ])
             } else {
                 Line::from(vec![
-                    Span::raw(format!("{}Logs ", bottom_prefix)),
+                    Span::styled(format!("{}Logs ", bottom_prefix), Style::default().fg(Color::White)),
                     Span::styled("[Auto-scroll: Off] ", muted_style()),
                 ])
             }
         }
-        DetailContentMode::ServiceFile => Line::from(format!("{}Service File ", bottom_prefix)),
+        DetailContentMode::ServiceFile => Line::from(Span::styled(
+            format!("{}Service File ", bottom_prefix),
+            Style::default().fg(Color::White),
+        )),
     };
     let logs_block = Block::default()
         .borders(Borders::ALL)
@@ -398,8 +407,11 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .style(warning_style())
-        .title(" Error (Press any key to dismiss) ");
+        .border_style(warning_style())
+        .title(Span::styled(
+            " Error (Press any key to dismiss) ",
+            Style::default().fg(Color::White),
+        ));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
