@@ -171,7 +171,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
                 Block::default()
                     .borders(Borders::ALL)
                     .border_style(border_style())
-                    .title(" Systemd Timers "),
+                    .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
             );
         f.render_widget(empty_para, area);
         return;
@@ -192,7 +192,7 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
         Block::default()
             .borders(Borders::ALL)
             .border_style(border_style())
-            .title(" Systemd Timers "),
+            .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
     )
     .highlight_style(selected_style())
     .highlight_symbol("▶  ");
@@ -278,14 +278,14 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             Span::raw(top_prefix),
             Span::styled(timer, emphasis_style()),
             Span::raw(" "),
-        ]))
+        ]).style(Style::default().fg(Color::White)))
         .title(Line::from(vec![
             Span::raw(controls_prefix),
             Span::styled(logs_label, logs_style),
             Span::raw(" | "),
             Span::styled(service_file_label, service_file_style),
             Span::raw(controls_suffix),
-        ]));
+        ]).style(Style::default().fg(Color::White)));
     let status_para = Paragraph::new(status_text)
         .block(status_block)
         .wrap(Wrap { trim: true });
@@ -319,7 +319,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         } else {
             inactive_border
         })
-        .title(bottom_title);
+        .title(bottom_title.style(Style::default().fg(Color::White)));
 
     let inner_width = chunks[1].width.saturating_sub(2);
     let inner_height = chunks[1].height.saturating_sub(2) as usize;
@@ -398,8 +398,8 @@ fn draw_error(f: &mut Frame, msg: &str, area: Rect) {
     let popup_area = centered_rect(60, 20, area);
     let block = Block::default()
         .borders(Borders::ALL)
-        .style(warning_style())
-        .title(" Error (Press any key to dismiss) ");
+        .border_style(warning_style())
+        .title(Line::from(" Error (Press any key to dismiss) ").style(Style::default().fg(Color::White)));
     let para = Paragraph::new(msg)
         .style(Style::default().fg(Color::White))
         .block(block)
