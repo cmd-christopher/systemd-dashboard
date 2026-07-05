@@ -275,7 +275,7 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             inactive_border
         })
         .title(Line::from(vec![
-            Span::raw(top_prefix),
+            Span::styled(top_prefix, if top_active { active_style() } else { muted_style() }),
             Span::styled(timer, emphasis_style()),
             Span::raw(" "),
         ]).style(Style::default().fg(Color::White)))
@@ -300,17 +300,22 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
         DetailContentMode::Logs => {
             if app.auto_scroll {
                 Line::from(vec![
-                    Span::raw(format!("{}Logs ", bottom_prefix)),
+                    Span::styled(bottom_prefix, if bottom_active { active_style() } else { muted_style() }),
+                    Span::raw("Logs "),
                     Span::styled("[Auto-scroll: On] ", active_style()),
                 ]).style(Style::default().fg(Color::White))
             } else {
                 Line::from(vec![
-                    Span::raw(format!("{}Logs ", bottom_prefix)),
+                    Span::styled(bottom_prefix, if bottom_active { active_style() } else { muted_style() }),
+                    Span::raw("Logs "),
                     Span::styled("[Auto-scroll: Off] ", muted_style()),
                 ]).style(Style::default().fg(Color::White))
             }
         }
-        DetailContentMode::ServiceFile => Line::from(format!("{}Service File ", bottom_prefix)).style(Style::default().fg(Color::White)),
+        DetailContentMode::ServiceFile => Line::from(vec![
+            Span::styled(bottom_prefix, if bottom_active { active_style() } else { muted_style() }),
+            Span::raw("Service File ")
+        ]).style(Style::default().fg(Color::White)),
     };
     let logs_block = Block::default()
         .borders(Borders::ALL)

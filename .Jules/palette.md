@@ -92,3 +92,6 @@
 ## 2026-06-29 - Block Title Inheritance
 **Learning:** Block::title text implicitly inherits the border_style color which can result in poor contrast. Additionally, applying a text color directly to a Block applies it to both the border and all internal text by default.
 **Action:** Separate styling by applying .border_style() for the Block's border and .style() on the inner text widget. Explicitly style Block::title using Line::from with a blanket style to maintain high contrast.
+## 2026-07-05 - Consistent Focus Indicator Styling
+**Learning:** In a multi-pane TUI view, if one pane explicitly styles its active state prefix (e.g., green, bold `▶ Status:`) while another pane renders it unstyled (`Span::raw`), it creates a visually inconsistent and confusing user experience when shifting focus.
+**Action:** Always maintain consistent styling logic for focus indicators across all UI components. Use `Span::styled` and apply an `active_style()` or `muted_style()` dynamically to pane prefixes depending on keyboard focus to preserve visual hierarchy.
