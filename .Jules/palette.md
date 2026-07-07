@@ -92,3 +92,7 @@
 ## 2026-06-29 - Block Title Inheritance
 **Learning:** Block::title text implicitly inherits the border_style color which can result in poor contrast. Additionally, applying a text color directly to a Block applies it to both the border and all internal text by default.
 **Action:** Separate styling by applying .border_style() for the Block's border and .style() on the inner text widget. Explicitly style Block::title using Line::from with a blanket style to maintain high contrast.
+
+## 2026-07-07 - Styled Pane Prefixes
+**Learning:** In multi-pane views, embedding focus indicators directly into strings prevents custom styling. Maintaining consistent visual logic for active/inactive indicators improves visual hierarchy.
+**Action:** Use `Span::styled` to dynamically style pane prefixes independently of the rest of the text based on focus.
