@@ -263,9 +263,9 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let top_prefix = if top_active {
-        " ▶ Status: "
+        " ▶ "
     } else {
-        "   Status: "
+        "   "
     };
     let status_block = Block::default()
         .borders(Borders::ALL)
@@ -275,7 +275,8 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
             inactive_border
         })
         .title(Line::from(vec![
-            Span::raw(top_prefix),
+            Span::styled(top_prefix, if top_active { active_style() } else { muted_style() }),
+            Span::raw("Status: "),
             Span::styled(timer, emphasis_style()),
             Span::raw(" "),
         ]).style(Style::default().fg(Color::White)))
@@ -292,25 +293,30 @@ fn draw_detail(f: &mut Frame, app: &mut App, area: Rect) {
     f.render_widget(status_para, chunks[0]);
 
     let bottom_prefix = if bottom_active {
-        " ▶ Bottom Pane: "
+        " ▶ "
     } else {
-        "   Bottom Pane: "
+        "   "
     };
     let bottom_title = match app.detail_content_mode {
         DetailContentMode::Logs => {
             if app.auto_scroll {
                 Line::from(vec![
-                    Span::raw(format!("{}Logs ", bottom_prefix)),
+                    Span::styled(bottom_prefix, if bottom_active { active_style() } else { muted_style() }),
+                    Span::raw("Bottom Pane: Logs "),
                     Span::styled("[Auto-scroll: On] ", active_style()),
                 ]).style(Style::default().fg(Color::White))
             } else {
                 Line::from(vec![
-                    Span::raw(format!("{}Logs ", bottom_prefix)),
+                    Span::styled(bottom_prefix, if bottom_active { active_style() } else { muted_style() }),
+                    Span::raw("Bottom Pane: Logs "),
                     Span::styled("[Auto-scroll: Off] ", muted_style()),
                 ]).style(Style::default().fg(Color::White))
             }
         }
-        DetailContentMode::ServiceFile => Line::from(format!("{}Service File ", bottom_prefix)).style(Style::default().fg(Color::White)),
+        DetailContentMode::ServiceFile => Line::from(vec![
+            Span::styled(bottom_prefix, if bottom_active { active_style() } else { muted_style() }),
+            Span::raw("Bottom Pane: Service File "),
+        ]).style(Style::default().fg(Color::White)),
     };
     let logs_block = Block::default()
         .borders(Borders::ALL)
