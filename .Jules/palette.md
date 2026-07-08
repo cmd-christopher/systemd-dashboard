@@ -92,3 +92,6 @@
 ## 2026-06-29 - Block Title Inheritance
 **Learning:** Block::title text implicitly inherits the border_style color which can result in poor contrast. Additionally, applying a text color directly to a Block applies it to both the border and all internal text by default.
 **Action:** Separate styling by applying .border_style() for the Block's border and .style() on the inner text widget. Explicitly style Block::title using Line::from with a blanket style to maintain high contrast.
+## 2025-05-30 - Consistently styled textual focus indicators in split panes
+**Learning:** In split-pane interfaces (like detail views with top and bottom panes), relying solely on colored borders to indicate focus violates accessibility guidelines and may be subtle on some terminals. Adding a textual focus indicator (like `▶`) improves visibility, but if the text is embedded in a single unstyled or mono-styled string with the title, the indicator lacks the visual "pop" of the active border color.
+**Action:** When using textual prefix indicators for pane focus, separate the indicator into its own `Span` and style it dynamically with the active/inactive colors (e.g., matching the border style) while keeping the pane title text in a consistent color. This provides a clear, high-contrast textual focus cue.
