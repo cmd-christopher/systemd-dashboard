@@ -195,7 +195,8 @@ fn draw_list(f: &mut Frame, app: &mut App, area: Rect) {
             .title(Line::from(" Systemd Timers ").style(Style::default().fg(Color::White))),
     )
     .highlight_style(selected_style())
-    .highlight_symbol("▶  ");
+    .highlight_symbol("▶  ")
+    .highlight_spacing(ratatui::widgets::HighlightSpacing::Always);
 
     let mut state = TableState::default();
     state.select(Some(app.selected_index));
