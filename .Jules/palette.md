@@ -92,3 +92,6 @@
 ## 2026-06-29 - Block Title Inheritance
 **Learning:** Block::title text implicitly inherits the border_style color which can result in poor contrast. Additionally, applying a text color directly to a Block applies it to both the border and all internal text by default.
 **Action:** Separate styling by applying .border_style() for the Block's border and .style() on the inner text widget. Explicitly style Block::title using Line::from with a blanket style to maintain high contrast.
+## 2024-07-18 - Prevent Table Horizontal Jitter
+**Learning:** In Ratatui `Table` widgets, applying a `highlight_symbol` without explicitly configuring highlight spacing causes horizontal layout shifts (jitter) depending on selection state.
+**Action:** Always set `.highlight_spacing(ratatui::widgets::HighlightSpacing::Always)` on `Table` widgets that use a `highlight_symbol` to ensure consistent padding.
